@@ -1,0 +1,92 @@
+{% trans_default_domain 'FOSUserBundle' %}
+
+{% if error %}
+    <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+{% endif %}
+<body class="login">
+<div>
+    <a class="hiddenanchor" id="signup"></a>
+    <a class="hiddenanchor" id="signin"></a>
+
+    <div class="login_wrapper">
+        <div class="animate form login_form">
+            <section class="login_content">
+
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+
+<body class="login">
+<div>
+    <a class="hiddenanchor" id="signup"></a>
+    <a class="hiddenanchor" id="signin"></a>
+
+    <div class="login_wrapper">
+        <div class="animate form login_form">
+            <section class="login_content">
+                <form action="{{ path("fos_user_security_check") }}" method="post">
+                    <h1>Iniciar sesión</h1>
+                    {% if csrf_token %}
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}" />
+                    {% endif %}
+
+                    <label for="username">{{ 'security.login.username'|trans }}</label>
+                    <input type="text" placeholder="Nombre de usuario" class="form-control" id="username" name="_username" value="{{ last_username }}" required="required" />
+
+                    <label for="password">{{ 'security.login.password'|trans }}</label>
+                    <input type="password" class="form-control" placeholder="Contraseña" id="password" name="_password" required="required" />
+
+                    <input type="checkbox" id="remember_me" name="_remember_me" value="on" />
+                    <label  for="remember_me">{{ 'security.login.remember_me'|trans }}</label>
+
+                    <input class="btn btn-primary " type="submit" id="_submit" name="_submit" value="{{ 'security.login.submit'|trans }}" />
+                </form>
+
+            </section>
+        </div>
+
+        <!--  <div id="register" class="animate form registration_form">
+              <section class="login_content">
+                  <form>
+                      <h1>Create Account</h1>
+                      <div>
+                          <input type="text" class="form-control" placeholder="Username" required="" />
+                      </div>
+                      <div>
+                          <input type="email" class="form-control" placeholder="Email" required="" />
+                      </div>
+                      <div>
+                          <input type="password" class="form-control" placeholder="Password" required="" />
+                      </div>
+                      <div>
+                          <a class="btn btn-default submit" href="index.html">Submit</a>
+                      </div>
+
+                      <div class="clearfix"></div>
+
+                      <div class="separator">
+                          <p class="change_link">Already a member ?
+                              <a href="#signin" class="to_register"> Log in </a>
+                          </p>
+
+                          <div class="clearfix"></div>
+                          <br />
+
+                          <div>
+                              <h1><i class="fa fa-paw"></i> Gentelella Alela!</h1>
+                              <p>©2016 All Rights Reserved. Gentelella Alela! is a Bootstrap 3 template. Privacy and Terms</p>
+                          </div>
+                      </div>
+                  </form>
+              </section>
+          </div>-->
+    </div>
+</div>
+</body>
+
+
+
+
+
