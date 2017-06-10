@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * @ORM\Table(name="usuarios", indexes={@ORM\Index(name="perfil", columns={"perfil"})})
  * @ORM\Entity
+ *
  */
 class Usuarios
 {
@@ -38,7 +39,7 @@ class Usuarios
      *
      * @ORM\Column(name="correo", type="string", length=150)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\GeneratedValue(strategy="NONE")
      */
     private $correo;
 
@@ -158,5 +159,19 @@ class Usuarios
     public function getPerfil()
     {
         return $this->perfil;
+    }
+
+    /**
+     * Set correo
+     *
+     * @param string $correo
+     *
+     * @return Usuarios
+     */
+    public function setCorreo($correo)
+    {
+        $this->correo = $correo;
+
+        return $this;
     }
 }
