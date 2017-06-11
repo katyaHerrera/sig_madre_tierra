@@ -1,10 +1,6 @@
 {% trans_default_domain 'FOSUserBundle' %}
 
-{% if error %}
-    <div class="alert alert-danger" role="alert">
-        {{ error.messageKey|trans(error.messageData, 'security') }}
-    </div>
-{% endif %}
+
 
 <body class="login">
 <div>
@@ -12,23 +8,11 @@
     <a class="hiddenanchor" id="signin"></a>
 
     <div class="login_wrapper">
+
         <div class="animate form login_form">
             <section class="login_content">
 
-            </section>
-        </div>
-    </div>
-</div>
-</body>
 
-<body class="login">
-<div>
-    <a class="hiddenanchor" id="signup"></a>
-    <a class="hiddenanchor" id="signin"></a>
-
-    <div class="login_wrapper">
-        <div class="animate form login_form">
-            <section class="login_content">
                 <form action="{{ path("fos_user_security_check") }}" method="post">
                     <h1>Iniciar sesión</h1>
                     {% if csrf_token %}
@@ -41,11 +25,18 @@
                     <label for="password">{{ 'security.login.password'|trans }}</label>
                     <input type="password" class="form-control" placeholder="Contraseña" id="password" name="_password" required="required" />
 
-                    <input type="checkbox" id="remember_me" name="_remember_me" value="on" />
-                    <label  for="remember_me">{{ 'security.login.remember_me'|trans }}</label>
+                        <input type="checkbox" id="remember_me" name="_remember_me" value="on" />
+                        <label  for="remember_me" name="remember_me" >{{ 'security.login.remember_me'|trans }}</label>
 
-                    <input class="btn btn-primary " type="submit" id="_submit" name="_submit" value="{{ 'security.login.submit'|trans }}" />
+
+                    <input class="btn btn-primary col-lg-4 " type="submit" id="_submit" name="_submit" value="{{ 'security.login.submit'|trans }}" />
                 </form>
+                {% if error %}
+                    <div class="alert alert-danger">
+                        <a href="#" class="close" data-dismiss="alert">×</a>
+                        <strong>Error!</strong> {{ error.messageKey|trans(error.messageData, 'security') }}
+                    </div>
+                {% endif %}
 
             </section>
         </div>
