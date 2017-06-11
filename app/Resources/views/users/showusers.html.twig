@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+
+{% block x_panel %}
+
+    <div class="x_panel">
+        <div class="x_title">
+            <h2>Listado de usuarios<small></small></h2>
+            <ul class="nav navbar-right panel_toolbox">
+                <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="#">Settings 1</a>
+                        </li>
+                        <li><a href="#">Settings 2</a>
+                        </li>
+                    </ul>
+                </li>
+                <li><a class="close-link"><i class="fa fa-close"></i></a>
+                </li>
+            </ul>
+            <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+            <div class="alert alert-success" style="display: none"  id="message">
+                <strong id="user-message">El usuario</strong>
+            </div>
+            <table id="datatable" class="table table-striped table-bordered">
+                <thead>
+                <tr>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Roles</th>
+                    <th>Estado</th>
+                    <th>Opciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                <tr class="row-table" id="row_{{ user.id }}">
+                    <td>{{ user.nombres }}</td>
+                    <td>{{ user.apellidos }}</td>
+                    <td>{{ user.roles| join(' , ') }}</td>
+                    {% if(user.enabled==1) %}
+                        {% set textDesactivado='hidden' %}
+                        {% set textActivo='' %}
+                    {% else %}
+                        {% set textDesactivado='' %}
+                        {% set textActivo='hidden' %}
+                    {% endif %}
+                    <td id="textActivo_{{ user.id }}" class="{{ textActivo }}">Activo</td>
+
+                    <td id="textDesactivado_{{ user.id }}" class="{{ textDesactivado }}">Desactivado</td>
+
+                    <td>
+                        <div class="btn-toolbar" role="toolbar" >
+                            <div class="btn-group" role="group">
+                                <button onclick="location='{{ path('show_detail_user',{'idUser': user.id}) }}'"
+                                        class="btn btn-success" data-toggle="tooltip" data-placement="bottom" title="Detalle">
+                                    <i class="glyphicon glyphicon-user"></i>
+                                </button>
+                            </div>
+                            {% if(user.enabled==1) %}
+                                {% set desactivar='' %}
+                                {% set activar='hidden' %}
+                            {% else %}
+                                {% set desactivar='hidden' %}
+                                {% set activar='' %}
+                            {% endif %}
+
+                            <div id="desactivar_{{ user.id }}" class="btn-group {{ desactivar }}" role="group" >
+                                <button class="btn  btn-warning" data-toggle="modal" data-placement="bottom" title="Desactivar"
+                                data-target="#desactivarModal_{{ user.id }}">
+                                    <i class="glyphicon glyphicon-ban-circle"></i>
+                                </button>
+                            </div>
+
+                                <div id="activar_{{ user.id }}" class="btn-group {{ activar }}" role="group" >
+                                    <button class="btn  btn-primary" data-toggle="modal" data-placement="bottom" title="activar"
+                                            data-target="#desactivarModal_{{ user.id }}">
+                                        <i class="glyphicon glyphicon-ok"></i>
+                                    </button>
+                                </div>
+
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-danger" data-toggle="modal" data-placement="bottom" title="Eliminar"
+                                        data-target="#eliminarModal_{{ user.id }}">
+                                    <i class="glyphicon glyphicon-remove"></i>
+                                </button>
+                            </div>
+
+                        </div>
+                    </td>
+
+                </tr>
+                <!-- MODAL ELIMINAR -->
+                <div id="eliminarModal_{{ user.id }}" class="modal fade" tabindex="-1" role="dialog">
+                    <div class="modal-dialog"  role="document">
+                        <div class="modal-content" >
+
+                            <div class="modal-body text-center">
+
+                                <p ><h4>¿Esta seguro que desea eliminar a {{ user.nombres }} {{ user.apellidos }}?</h4></p>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button id="{{ user.id }}" type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                                <button  type="button" id="{{ user.id }}" class="btn btn-danger btn-delete">Eliminar</button>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div>
+
+    <!-- MODAL DESACTIVAR-->
+
+                <div id="desactivarModal_{{ user.id }}" class="modal fade" tabindex="-1" role="dialog">
+                    <div class="modal-dialog"  role="document">
+                        <div class="modal-content" >
+
+                            <div class="modal-body text-center">
+                                <p >
+                                    <h4 id="textModalDesactivar_{{ user.id }}" class="{{ desactivar }}">¿Desactivar a {{ user.nombres }} {{ user.apellidos }}? </h4>
+                                    <h4 id="textModalActivar_{{ user.id }}" class="{{ activar }}">¿Activar a {{ user.nombres }} {{ user.apellidos }}?</h4>
+                                </p>
+
+                            </div>
+                            <!-- la clase btnAction para capturar el evento con javascript
+                            //las clases desactivarBM_ y activarBM_ se usan para controlar el 'hidden' desde el javascript-->
+                            <div class="modal-footer" >
+                                <button type="button" id="{{ user.id }}" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                                <button type="button" id="{{ user.id }}" class="btn btn-warning btnAction
+                                desactivarBM_{{ user.id }} {{ desactivar }}"> Desactivar</button>
+                                <button type="button" id="{{ user.id }}" class="btn btn-primary btnAction
+                                activarBM_{{ user.id }} {{ activar }}">Activar</button>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div>
+
+
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {{ include(':users:form_ajax.html.twig',{form: delete_form_ajax,
+    id: 'form-delete'})}}
+
+    {{ include('users/form_ajax.html.twig',{form: update_form_ajax,
+    id: 'form-update'}) }}
+
+{% endblock x_panel %}
+
+{% block javascript %}
+{{ parent() }}
+    <script src="{{ asset('js/delete_user.js') }}"></script>
+{% endblock javascript %}

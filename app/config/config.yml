@@ -6,7 +6,7 @@ imports:
 # Put parameters here that don't need to change on each machine where the app is deployed
 # http://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
-    locale: en
+    locale: es
 
 framework:
     #esi: ~
@@ -26,7 +26,9 @@ framework:
     session:
         # http://symfony.com/doc/current/reference/configuration/framework.html#handler-id
         handler_id: session.handler.native_file
+        cookie_lifetime: 1800
         save_path: '%kernel.project_dir%/var/sessions/%kernel.environment%'
+
     fragments: ~
     http_method_override: true
     assets: ~
@@ -35,6 +37,8 @@ framework:
 
 # Twig Configuration
 twig:
+    form_themes:
+            - "bootstrap_3_layout.html.twig"
     debug: '%kernel.debug%'
     strict_variables: '%kernel.debug%'
 
@@ -75,6 +79,9 @@ fos_user:
     from_email:
         address: "%mailer_user%"
         sender_name: "%mailer_user%"
+    registration:
+            form:
+                 type: AppBundle\Form\RegistrationType
 
 doctrine_migrations:
     dir_name: "%kernel.root_dir%/DoctrineMigrations"
