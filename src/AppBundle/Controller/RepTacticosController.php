@@ -40,7 +40,7 @@ class RepTacticosController extends Controller
     }
 
     /**
-     * @Route("/consumo-agua")
+     * @Route("/consumo-agua", name="consumo_agua")
      * @Method({"GET", "POST"})
      */
     public function consumoAguaAction(Request $request){
@@ -120,7 +120,7 @@ class RepTacticosController extends Controller
 
 
     /**
-     * @Route("/eficiencia-fisica")
+     * @Route("/eficiencia-fisica", name="eficiencia_fisica")
      * @Method({"GET", "POST"})
      */
     public function eficienciaFisicaAction(Request $request){
@@ -174,7 +174,7 @@ class RepTacticosController extends Controller
     }
 
     /**
-     * @Route("/indicador-energetico")
+     * @Route("/indicador-energetico", name="indicador_energetico")
      * @Method({"GET", "POST"})
      */
     public function indicadorEnergeticoAction(Request $request){
@@ -228,7 +228,7 @@ class RepTacticosController extends Controller
     }
 
     /**
-     * @Route("/dotacion-habitante")
+     * @Route("/dotacion-habitante", name="dotacion_habitante")
      * @Method({"GET", "POST"})
      */
     public function dotacionHabitanteAction(Request $request){
@@ -283,7 +283,7 @@ class RepTacticosController extends Controller
     }
 
     /**
-     * @Route("/acometidas-activas")
+     * @Route("/acometidas-activas", name="acom_activas")
      * @Method({"GET", "POST"})
      */
     public function acometidasActivasAction(Request $request){
@@ -351,7 +351,7 @@ class RepTacticosController extends Controller
     }
 
     /**
-     * @Route("/mayor-consumo")
+     * @Route("/mayor-consumo", name="mayor_consumo")
      * @Method({"GET", "POST"})
      */
     public function mayorConsumoAction(Request $request){

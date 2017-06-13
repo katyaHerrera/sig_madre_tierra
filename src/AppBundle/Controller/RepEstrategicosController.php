@@ -39,7 +39,7 @@ class RepEstrategicosController extends Controller
     }
 
     /**
-     * @Route("/eficiencia-global-comercial")
+     * @Route("/eficiencia-global-comercial", name="efiGlobalComercial")
      * @Method({"GET", "POST"})
      */
     public function eficienciaComGloActtion(Request $request){
@@ -94,7 +94,7 @@ class RepEstrategicosController extends Controller
     }
 
     /**
-     * @Route("/indicador-rentabilidad")
+     * @Route("/indicador-rentabilidad", name="rentabilidad")
      * @Method({"GET", "POST"})
      */
     public function indRentabilidadAction(Request $request){
@@ -148,7 +148,7 @@ class RepEstrategicosController extends Controller
     }
 
     /**
-     * @Route("/cont-servicio")
+     * @Route("/cont-servicio", name="cont_servicio")
      * @Method({"GET", "POST"})
      */
     public function contServicioAction(Request $request){
@@ -215,7 +215,7 @@ class RepEstrategicosController extends Controller
     }
 
     /**
-     * @Route("/cob-micromedicion")
+     * @Route("/cob-micromedicion", name="cob_micromedicion")
      * @Method({"GET", "POST"})
      */
     public function cobMicrommedicion(Request $request){
@@ -284,7 +284,7 @@ class RepEstrategicosController extends Controller
 
 
     /**
-     * @Route("/resp-reclamos")
+     * @Route("/resp-reclamos", name="reclamos")
      * @Method({"GET", "POST"})
      */
     public function respReclamosAction(Request $request){
