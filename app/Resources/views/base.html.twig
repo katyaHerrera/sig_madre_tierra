@@ -67,13 +67,39 @@
                                     <li><a href="index3.html">Dashboard3</a></li>
                                 </ul>
                             </li>
-                            <li><a><i class="fa fa-user"></i>Usuarios <span class="fa fa-chevron-down"></span></a>
+
+                            {% if is_granted('ROLE_SUPER_ADMIN') %}
+
+                                <li><a><i class="fa fa-user"></i>Usuarios <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
                                     <li><a href="{{ path ('fos_user_registration_register') }}"> Nuevo usuario</a></li>
                                     <li><a href="{{ path('show_users') }}"> Lista de usuarios</a></li>
 
                                 </ul>
                             </li>
+
+                            {% endif %}
+
+                            {% if( is_granted('ROLE_STRATEGIC') or is_granted('ROLE_SUPER_ADMIN')  )  %}
+                            <li><a><i class="fa fa-home"></i> Estrategico<span class="fa fa-chevron-down"></span></a>
+                                <ul class="nav child_menu">
+                                    <li><a href="index.html">Indicador 1</a></li>
+                                    <li><a href="index2.html">Indicador 2</a></li>
+                                    <li><a href="index3.html">Indicador 3</a></li>
+                                </ul>
+                            </li>
+                            {% endif %}
+
+                            {% if ( is_granted('ROLE_TACTICO')  or is_granted('ROLE_SUPER_ADMIN')  ) %}
+                                <li><a><i class="fa fa-home"></i>Tactico<span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a href="index.html">Indicador 1</a></li>
+                                        <li><a href="index2.html">Indicador 2</a></li>
+                                        <li><a href="index3.html">Indicador 3</a></li>
+                                    </ul>
+                                </li>
+                            {% endif %}
+
 
                         </ul>
                     </div>
