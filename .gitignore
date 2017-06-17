@@ -16,3 +16,8 @@
 /vendor/
 /web/bundles/
 /.idea/
+.idea/sig_madre_tierra.iml
+.idea/sig_madre_tierra.iml
+.idea/workspace.xml
+app/config/services.yml
+app/config/services.yml

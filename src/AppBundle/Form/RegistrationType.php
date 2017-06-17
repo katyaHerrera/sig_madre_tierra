@@ -9,18 +9,58 @@
 namespace AppBundle\Form;
 
 
+use AppBundle\Services\RolesHelper;
+
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 
 class RegistrationType extends AbstractType
 {
+    private $roles;
+    private $roleHierarchy;
+    private $theRoles;
+
+
+    public function __construct(ContainerInterface $container)
+    {
+        $this->roleHierarchy = $container->getParameter('security.role_hierarchy.roles');
+        print_r($this->roles);
+
+        $this->theRoles = array_keys($this->roleHierarchy);
+
+        foreach ($this->theRoles as $role) {
+            $theRoles[$role] = $role;
+        }
+
+        $this->roles=array(
+          'ESTRATEGICO'=>$this->theRoles[0],
+          'TACTICO'=>$this->theRoles[1],
+          'ADMINISTRADOR'=>$this->theRoles[2]
+        );
+
+        print_r($this->roles);
+
+
+    }
+
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
        $builder
            ->add('nombres',TextType::class)
            ->add('apellidos',TextType::class)
-       ;
+           ->add('roles',ChoiceType::class, array(
+               'choices'  => $this->roles,
+               'expanded'  => true,
+               'multiple'  => true,
+               'required' => false,
+           ));
+
+
+        ;
     }
     public function getParent()
     {
