@@ -54,7 +54,7 @@ resetting:
         Si no recibe un correo electrónico, comprueba tu carpeta de correo no deseado o inténtelo de nuevo.
 
     request:
-        username: 'Nombre de usuario o correo electrónico'
+        username: 'Nombre de usuario'
         submit: 'Restablecer contraseña'
     reset:
         submit: 'Cambiar contraseña'

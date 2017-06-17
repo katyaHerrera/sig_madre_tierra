@@ -77,11 +77,23 @@ fos_user:
     firewall_name: main
     user_class: AppBundle\Entity\User
     from_email:
-        address: "%mailer_user%"
-        sender_name: "%mailer_user%"
+        address: '%mailer_user%'
+        sender_name: Madre Tierra
+    resetting:
+            email:
+                from_email:
+                    address: '%mailer_user%'
+                    sender_name: Madre Tierra
     registration:
             form:
                  type: AppBundle\Form\RegistrationType
+    service:
+        mailer:               fos_user.mailer.default
+        email_canonicalizer:  fos_user.util.canonicalizer.default
+        token_generator:      fos_user.util.token_generator.default
+        username_canonicalizer:  fos_user.util.canonicalizer.default
+        user_manager:         fos_user.user_manager.default
+
 
 doctrine_migrations:
     dir_name: "%kernel.root_dir%/DoctrineMigrations"

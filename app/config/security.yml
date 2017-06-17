@@ -18,8 +18,6 @@ security:
                 provider: fos_userbundle
                 #csrf_token_generator: security.csrf.token_manager
                 require_previous_session: false
-                username_parameter: _username
-                password_parameter: _password
             logout:       true
             anonymous:    true
             remember_me:
@@ -31,8 +29,25 @@ security:
 
 
     access_control:
+        #paginas de acceso para el publico
         - { path: ^/login$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        #paginas de acceso para todos lo usuarios
+        - { path: ^/$, role: ROLE_USER }
+        #paginas de acceso para el super administrador
         - { path: ^/register, role: ROLE_SUPER_ADMIN }
-        - { path: ^/resetting, role: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/, role: ROLE_USER }
-        - {path: ^/register/confirmed, role: IS_AUTHENTICATED_ANONYMOUSLY}
+        - { path: ^/users, role:  ROLE_SUPER_ADMIN }
+        #paginas de acceso para el rol estrategico
+        - {path: ^/reportes-estrategicos, role: ROLE_STRATEGIC }
+        - {path: ^/eficiencia-global-comercial, role: ROLE_STRATEGIC }
+        - {path: ^/indicador-rentabilidad, role: ROLE_STRATEGIC }
+        - {path: ^/cont-servicio, role: ROLE_STRATEGIC }
+        - {path: ^/cob-micromedicion, role: ROLE_STRATEGIC }
+        - {path: ^/resp-reclamos, role: ROLE_STRATEGIC }
+        #paginas de acceso para el rol tactico
+        - {path: ^/reportes-tacticos, role: ROLE_TACTICO }
+        - {path: ^/consumo-agua, role: ROLE_TACTICO }
+        - {path: ^/eficiencia-fisica, role: ROLE_TACTICO }
+        - {path: ^/indicador-energetico, role: ROLE_TACTICO }
+        - {path: ^/dotacion-habitante, role: ROLE_TACTICO }
+        - {path: ^/acometidas-activas, role: ROLE_TACTICO }
+        - {path: ^/mayor-consumo, role: ROLE_TACTICO }

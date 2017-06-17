@@ -1,10 +1,27 @@
 {% trans_default_domain 'FOSUserBundle' %}
 
+<body class="login">
+<div>
+    <a class="hiddenanchor" id="signup"></a>
+    <a class="hiddenanchor" id="signin"></a>
+
+    <div class="login_wrapper">
+
+        <div class="animate form login_form">
+            <section class="login_content">
+
+
 {{ form_start(form, { 'action': path('fos_user_resetting_reset', {'token': token}), 'attr': { 'class': 'fos_user_resetting_reset' } }) }}
    <div class="form-group">
        {{ form_widget(form) }}
    </div>
     <div>
-        <input type="submit" value="{{ 'resetting.reset.submit'|trans }}" />
+        <input type="submit" class="btn btn-primary" value="{{ 'resetting.reset.submit'|trans }}" />
     </div>
 {{ form_end(form) }}
+
+            </section>
+        </div>
+    </div>
+</div>
+</body>

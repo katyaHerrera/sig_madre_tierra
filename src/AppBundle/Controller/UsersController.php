@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UsersController extends Controller
 {
+    //muestra la lista de usuarios
     /**
      * @Route("/users", name="show_users")
      */
@@ -115,9 +116,6 @@ class UsersController extends Controller
                 );
             }
         }
-
-
-
     }
 
     private function deleteUserR($em,$user){
@@ -130,8 +128,6 @@ class UsersController extends Controller
         $alert='mensaje';
 
         return array('removed'=>$removed, 'message'=> $message, 'alert'=>$alert);
-
-
     }
 
     /**
