@@ -41,9 +41,6 @@ class RegistrationType extends AbstractType
           'ADMINISTRADOR'=>$this->theRoles[2]
         );
 
-        print_r($this->roles);
-
-
     }
 
 

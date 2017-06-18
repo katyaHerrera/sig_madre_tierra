@@ -1,9 +1,26 @@
-
+{% extends "layoutlogin.html.twig" %}
 
 {% trans_default_domain 'FOSUserBundle' %}
+{% block body %}
+<body class="login">
+<div>
+    <a class="hiddenanchor" id="signup"></a>
+    <a class="hiddenanchor" id="signin"></a>
+
+    <div class="login_wrapper">
+
+        <div class="animate form login_form">
+            <section class="login_content">
 
 {% block fos_user_content %}
 <p>
 {{ 'resetting.check_email'|trans({'%tokenLifetime%': tokenLifetime})|nl2br }}
 </p>
-{% endblock %}
+    <input type="button" class="btn btn-default" onclick="location.href='/login';" value="Regresar" />
+{% endblock  fos_user_content %}
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+{% endblock body %}
