@@ -18,4 +18,19 @@ class DefaultController extends Controller
             'base_dir' => realpath($this->getParameter('kernel.project_dir')).DIRECTORY_SEPARATOR,
         ]);
     }
+
+    /**
+     * @Route("/respaldo-DB")
+     */
+    public function respaldoBDShowAction(Request $request){
+
+        //Recoger GET
+        $var=$request->query->get("confirmation");
+
+        return $this->render('default/respaldoDB.html.twig',array(
+            'confirmation'=>$var
+
+        ));
+
+    }
 }

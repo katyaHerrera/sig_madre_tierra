@@ -69,18 +69,14 @@
 
                                 <li><a><i class="fa fa-user"></i>Usuarios <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
-                                    <li><a href="{{ path ('fos_user_registration_register') }}"> Nuevo usuario</a></li>
+                                    <li><a href="{{ path ('fos_user_registration_register') }}"> Crear usuario</a></li>
                                     <li><a href="{{ path('show_users') }}"> Lista de usuarios</a></li>
 
                                 </ul>
                             </li>
 
-                                <li><a><i class="fa fa-database"></i>Base de datos <span class="fa fa-chevron-down"></span></a>
-                                    <ul class="nav child_menu">
-                                        <li><a href="#"> Nuevo usuario</a></li>
-                                        <li><a href="#"> Lista de usuarios</a></li>
+                                <li><a href="/respaldo-DB"><i class="fa fa-database"></i>Base de datos</a>
 
-                                    </ul>
                                 </li>
 
                             {% endif %}
@@ -251,12 +247,7 @@
 
         <!-- footer content -->
         {% block footer %}
-            <footer>
-                <div class="pull-right">
-                    Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
-                </div>
-                <div class="clearfix"></div>
-            </footer>
+           
         {% endblock %}
         <!-- /footer content -->
     </div>
