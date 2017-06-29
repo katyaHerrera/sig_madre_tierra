@@ -10,13 +10,13 @@
             <br/>
             {{  form_start(form, {'attr': {'class' : 'form-horizontal'}}) }}
             <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                {{ form_label(form.tipo_reclamo, 'Tipo de Reclamo: ') }}
+                {{ form_label(form.sector, 'Sector: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
                 <div class="col-md-12">
                     <div class="col-md-6 col-sm-6 col-xs-12">
-                        {{ form_widget(form.tipo_reclamo, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
+                        {{ form_widget(form.sector, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
                     </div>
                 </div>
-                {{ form_errors(form.tipo_reclamo, {'attr' : {'class' : 'alert'}}) }}
+                {{ form_errors(form.sector, {'attr' : {'class' : 'alert'}}) }}
 
             </div>
             <div class="form-group col-md-12 col-sm-12 col-xs-12">
@@ -69,7 +69,7 @@
                     {{ form_widget(form.send, {'attr' : {'class' : "btn btn-success" }}) }}
                 </div>
             </div>
-            {{ form_end(form, {'render_rest': false}) }}
+            {{ form_end(form) }}
         </div>
     </div>
 

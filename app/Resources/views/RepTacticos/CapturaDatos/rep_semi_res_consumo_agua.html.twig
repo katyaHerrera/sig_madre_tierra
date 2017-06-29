@@ -1,6 +1,11 @@
 {% extends 'base.html.twig' %}
 {% block namePageTitle %}<h3>{{ pageHeader }}</h3> {% endblock %}
 {% block x_panel %}
+    <style>
+        input[type="radio"]+label{
+            padding-right: 2em;
+        }
+    </style>
     <div class="x_panel">
         <div class="x_title">
             <h2>Parametros del Reporte</h2>
@@ -9,25 +14,28 @@
         <div class="x_content">
             <br/>
             {{  form_start(form, {'attr': {'class' : 'form-horizontal'}}) }}
-            <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                {{ form_label(form.sector, 'Sector: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
-                <div class="col-md-12">
-                    <div class="col-md-6 col-sm-6 col-xs-12">
-                        {{ form_widget(form.sector, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
-                    </div>
-                </div>
-                {{ form_errors(form.sector, {'attr' : {'class' : 'alert'}}) }}
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="form-group col-md-6 col-sm-6 col-xs-12">
+                    {{ form_label(form.periodo, 'Período: ', {'label_attr' : {'class' : 'control-label col-md-2 col-sm-1 col-xs-12'}}) }}
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            {{ form_widget(form.periodo, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
+                        </div>
+                    {{ form_errors(form.periodo, {'attr' : {'class' : 'alert'}}) }}
 
+                </div>
+                <div class="form-group col-md-6 col-sm-6 col-xs-12">
+                    {{ form_label(form.tarifa, 'Tarifa: ', {'label_attr' : {'class' : 'control-label col-md-2 col-sm-2 col-xs-12'}}) }}
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            {{ form_widget(form.tarifa, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
+                        </div>
+                    {{ form_errors(form.tarifa, {'attr' : {'class' : 'alert'}}) }}
+
+                </div>
             </div>
-            <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                {{ form_label(form.periodo, 'Período: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
-                <div class="col-md-12">
-                    <div class="col-md-6 col-sm-6 col-xs-12">
-                        {{ form_widget(form.periodo, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
-                    </div>
-                </div>
-                {{ form_errors(form.periodo, {'attr' : {'class' : 'alert'}}) }}
-
+            <br />
+            <div class="co-md-12 col-sm-12 col-xs-12">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Tipo de Cliente: </label>
+                {{ form_widget(form.tipo_cliente) }}
             </div>
             <br />
             <div class="col-md-12 col-sm-12 col-xs-12">
@@ -69,7 +77,7 @@
                     {{ form_widget(form.send, {'attr' : {'class' : "btn btn-success" }}) }}
                 </div>
             </div>
-            {{ form_end(form, {'render_rest': false}) }}
+            {{ form_end(form) }}
         </div>
     </div>
 

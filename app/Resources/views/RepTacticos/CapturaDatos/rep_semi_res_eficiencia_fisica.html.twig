@@ -8,7 +8,7 @@
         </div>
         <div class="x_content">
             <br/>
-           {{  form_start(form, {'attr': {'class' : 'form-horizontal'}}) }}
+            {{  form_start(form, {'attr': {'class' : 'form-horizontal'}}) }}
             <div class="form-group col-md-12 col-sm-12 col-xs-12">
                 {{ form_label(form.periodo, 'Período: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
                 <div class="col-md-12">
@@ -59,7 +59,7 @@
                     {{ form_widget(form.send, {'attr' : {'class' : "btn btn-success" }}) }}
                 </div>
             </div>
-            {{ form_end(form, {'render_rest': false}) }}
+            {{ form_end(form) }}
         </div>
     </div>
 

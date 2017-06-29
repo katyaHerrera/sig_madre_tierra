@@ -46,7 +46,8 @@ class RepTacticosController extends Controller
     public function consumoAguaAction(Request $request){
         $manager = $this->getDoctrine()->getManager();
         $conn = $manager->getConnection();
-        $stmnt = $conn->prepare("SELECT id_tarifa, CONCAT(consumo_min, '-', consumo_max) rango FROM tarifas");
+        $stmnt = $conn->prepare("SELECT id_tarifa, CONCAT(consumo_min, '-', consumo_max) rango FROM 
+dbtransaccional.tarifas");
         $stmnt->execute();
 
         $result = $stmnt->fetchAll();
@@ -112,7 +113,7 @@ class RepTacticosController extends Controller
             $data = $form->getData();
         }
 
-        return $this->render('RepTacticos/rep_semi_res_consumo_agua.html.twig', array(
+        return $this->render('RepTacticos/CapturaDatos/rep_semi_res_consumo_agua.html.twig', array(
             'form' => $form->createView(), "pageHeader" => "Reporte semi-resumen de Consumo de Agua por rango de Tarifa"
         ));
 
@@ -168,7 +169,7 @@ class RepTacticosController extends Controller
             $data = $form->getData();
         }
 
-        return $this->render('RepTacticos/rep_semi_res_eficiencia_fisica.html.twig', array(
+        return $this->render('RepTacticos/CapturaDatos/rep_semi_res_eficiencia_fisica.html.twig', array(
             'form' => $form->createView(), "pageHeader" => "Reporte semi-resumen de indicador de eficiencia fisica"
         ));
     }
@@ -222,7 +223,7 @@ class RepTacticosController extends Controller
             $data = $form->getData();
         }
 
-        return $this->render('RepTacticos/rep_semi_res_eficiencia_fisica.html.twig', array(
+        return $this->render('RepTacticos/CapturaDatos/rep_semi_res_eficiencia_fisica.html.twig', array(
             'form' => $form->createView(), "pageHeader" => "Reporte semi-resumen de indicador energetico"
         ));
     }
@@ -276,7 +277,7 @@ class RepTacticosController extends Controller
             $data = $form->getData();
         }
 
-        return $this->render('RepTacticos/rep_semi_res_eficiencia_fisica.html.twig', array(
+        return $this->render('RepTacticos/CapturaDatos/rep_semi_res_eficiencia_fisica.html.twig', array(
             'form' => $form->createView(), "pageHeader" => "Reporte semi-resumen de dotación de agua disponible 
             por habitante"
         ));
@@ -289,7 +290,7 @@ class RepTacticosController extends Controller
     public function acometidasActivasAction(Request $request){
         $manager = $this->getDoctrine()->getManager();
         $conn = $manager->getConnection();
-        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM sectores");
+        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM dbtransaccional.sectores");
         $stmnt->execute();
 
         $result = $stmnt->fetchAll();
@@ -345,7 +346,7 @@ class RepTacticosController extends Controller
             $data = $form->getData();
         }
 
-        return $this->render('RepTacticos/rep_semi_res_acom_activas.html.twig', array(
+        return $this->render('RepTacticos/CapturaDatos/rep_semi_res_acom_activas.html.twig', array(
             'form' => $form->createView(), "pageHeader" => "Reporte semi-resumen de acometidas activas"
         ));
     }
@@ -357,7 +358,7 @@ class RepTacticosController extends Controller
     public function mayorConsumoAction(Request $request){
         $manager = $this->getDoctrine()->getManager();
         $conn = $manager->getConnection();
-        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM sectores");
+        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM dbtransaccional.sectores");
         $stmnt->execute();
 
         $result = $stmnt->fetchAll();
@@ -413,7 +414,7 @@ class RepTacticosController extends Controller
             $data = $form->getData();
         }
 
-        return $this->render('RepTacticos/rep_semi_res_acom_activas.html.twig', array(
+        return $this->render('RepTacticos/CapturaDatos/rep_semi_res_acom_activas.html.twig', array(
             'form' => $form->createView(), "pageHeader" => "Reporte semi-resumen de clientes con mayor consumo"
         ));
     }
