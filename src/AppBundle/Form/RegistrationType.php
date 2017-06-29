@@ -41,22 +41,23 @@ class RegistrationType extends AbstractType
           'ADMINISTRADOR'=>$this->theRoles[2]
         );
 
-        print_r($this->roles);
-
-
     }
 
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
        $builder
-           ->add('nombres',TextType::class)
-           ->add('apellidos',TextType::class)
+           ->add('nombres',TextType::class,array(
+               'required' => true
+           ))
+           ->add('apellidos',TextType::class,array(
+               'required' => true
+           ))
            ->add('roles',ChoiceType::class, array(
                'choices'  => $this->roles,
                'expanded'  => true,
                'multiple'  => true,
-               'required' => false,
+               'required' => true,
            ));
 
 

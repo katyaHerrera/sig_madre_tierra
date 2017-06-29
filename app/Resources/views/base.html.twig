@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {% block title %}<title>Madre Tierra </title>{% endblock %}
-
+{% block stylesheets %}
         <!-- Bootstrap -->
         <link href="{{ asset('vendor/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
         <!-- Font Awesome -->
@@ -30,6 +30,7 @@
 
         <!-- Custom Theme Style -->
         <link href="{{ asset('build/css/custom.min.css') }}" rel="stylesheet">
+    {% endblock stylesheets %}
 </head>
 
 <body class="nav-md">
@@ -60,37 +61,47 @@
                     <div class="menu_section">
                         <h3>General</h3>
                         <ul class="nav side-menu">
-                            <li><a><i class="fa fa-home"></i> Home</a>
+                            <li><a href="/"><i class="fa fa-home"></i> Home </a>
+
                             </li>
 
                             {% if is_granted('ROLE_SUPER_ADMIN') %}
 
                                 <li><a><i class="fa fa-user"></i>Usuarios <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
-                                    <li><a href="{{ path ('fos_user_registration_register') }}"> Nuevo usuario</a></li>
+                                    <li><a href="{{ path ('fos_user_registration_register') }}"> Crear usuario</a></li>
                                     <li><a href="{{ path('show_users') }}"> Lista de usuarios</a></li>
 
                                 </ul>
                             </li>
 
+                                <li><a href="/respaldo-DB"><i class="fa fa-database"></i>Base de datos</a>
+
+                                </li>
+
                             {% endif %}
 
                             {% if( is_granted('ROLE_STRATEGIC')  )  %}
-                            <li><a><i class="fa fa-home"></i> Estrategico<span class="fa fa-chevron-down"></span></a>
+                            <li><a><i class="fa fa-line-chart"></i> Estrategico<span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
-                                    <li><a href="index.html">Indicador 1</a></li>
-                                    <li><a href="index2.html">Indicador 2</a></li>
-                                    <li><a href="index3.html">Indicador 3</a></li>
+                                    <li><a href="/reportes-estrategicos/eficiencia-global-comercial">Eficiencia Global y comercial</a></li>
+                                    <li><a href="/reportes-estrategicos/indicador-rentabilidad">Rentabilidad</a></li>
+                                    <li><a href="/reportes-estrategicos/cont-servicio">Continuidad del servicio</a></li>
+                                    <li><a href="/reportes-estrategicos/cob-micromedicion">Cobertura de micromedición</a></li>
+                                    <li><a href="/reportes-estrategicos/resp-reclamos">Tiempo de respuesta a reclamos</a></li>
                                 </ul>
                             </li>
                             {% endif %}
 
                             {% if ( is_granted('ROLE_TACTICO')  ) %}
-                                <li><a><i class="fa fa-home"></i>Tactico<span class="fa fa-chevron-down"></span></a>
+                                <li><a><i class="fa fa-bar-chart"></i>Tactico<span class="fa fa-chevron-down"></span></a>
                                     <ul class="nav child_menu">
-                                        <li><a href="index.html">Indicador 1</a></li>
-                                        <li><a href="index2.html">Indicador 2</a></li>
-                                        <li><a href="index3.html">Indicador 3</a></li>
+                                        <li><a href="/reportes-tacticos/consumo-agua">Consumo de Agua por rango de tarifa</a></li>
+                                        <li><a href="/reportes-tacticos/eficiencia-fisica">Eficiencia fisica</a></li>
+                                        <li><a href="/reportes-tacticos/indicador-energetico">Indicador energético</a></li>
+                                        <li><a href="/reportes-tacticos/dotacion-habitante">Dotación de agua disponible por habitante</a></li>
+                                        <li><a href="/reportes-tacticos/acometidas-activas">Acometidas activas</a></li>
+                                        <li><a href="/reportes-tacticos/mayor-consumo">Clientes con mayor consumo</a></li>
                                     </ul>
                                 </li>
                             {% endif %}
@@ -99,52 +110,20 @@
                         </ul>
                     </div>
                     <div class="menu_section">
-                        <h3>Reportes</h3>
-                        <ul class="nav side-menu">
-                            <li><a><i class="fa fa-file-text"></i> Reportes Estrategicos <span class="fa fa-chevron-down"></span></a>
-                                <ul class="nav child_menu">
-                                    <li><a href="{{ path('efiGlobalComercial') }}">Inidcadores de Efciencia Global y Comercial</a></li>
-                                    <li><a href="{{ path('rentabilidad') }}">Rentabilidad</a></li>
-                                    <li><a href="{{ path('cont_servicio') }}">Continuidad del Servicio</a></li>
-                                    <li><a href="{{ path('cob_micromedicion') }}">Cobertura de Micromedición</a></li>
-                                    <li><a href="{{ path('reclamos') }}">Respuest a Reclamos</a></li>
-                                </ul>
-                            </li>
-                            <li><a><i class="fa fa-file-text-o"></i> Reportes Tácticos <span class="fa fa-chevron-down"></span></a>
-                                <ul class="nav child_menu">
-                                    <li><a href="{{ path('consumo_agua') }}">Consumo de Agua</a></li>
-                                    <li><a href="{{ path('eficiencia_fisica') }}">Eficiencia Fisica</a></li>
-                                    <li><a href="{{ path('indicador_energetico') }}">Inidicador Energetico</a></li>
-                                    <li><a href="{{ path('dotacion_habitante') }}">Dotación por habitante</a></li>
-                                    <li><a href="{{ path('acom_activas') }}">Acometidas Activas</a></li>
-                                    <li><a href="{{ path('mayor_consumo') }}">Clientes con mayor consumo</a></li>
-                                </ul>
-                            </li>
 
+                        <ul class="nav side-menu">
+                            <li><a><i class="glyphicon glyphicon-cog"></i> Configuración <span class="fa fa-chevron-down"></span></a>
+                                <ul class="nav child_menu">
+                                    <li><a href="/profile/edit">Editar perfil</a></li>
+                                    <li><a href="/profile/change-password">Cambiar contraseña</a></li>
+                                </ul>
+                            </li>
 
                         </ul>
                     </div>
 
                 </div>
-                <!-- /sidebar menu -->
 
-                <!-- /menu footer buttons -->
-                <div class="sidebar-footer hidden-small">
-                    <a data-toggle="tooltip" data-placement="top" title="Settings">
-                        <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
-                    </a>
-                    <a data-toggle="tooltip" data-placement="top" title="FullScreen">
-                        <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
-                    </a>
-                    <a data-toggle="tooltip" data-placement="top" title="Lock">
-                        <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
-                    </a>
-                    <a data-toggle="tooltip" data-placement="top" href="{{ path('fos_user_security_logout') }}">
-                        <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
-                    </a>
-
-
-                </div>
                 <!-- /menu footer buttons -->
             </div>
         </div>
@@ -160,7 +139,7 @@
                     <ul class="nav navbar-nav navbar-right">
                         <li class="">
                             <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                                {{ 'layfa faout.logged_in_as'|trans({'%username%': app.user.username}, 'FOSUserBundle') }}
+                                {{ 'layout.logged_in_as'|trans({'%username%': app.user.username}, 'FOSUserBundle') }}
                                 <span class=" fa fa-angle-down"></span>
                             </a>
                             <ul class="dropdown-menu dropdown-usermenu pull-right">
@@ -246,7 +225,7 @@
             <div class="">
                 <div class="page-title">
                     <div class="title_left">
-                        {% block namePageTitle %}<h3>Bienvenidos</h3>{% endblock %}
+                        {% block namePageTitle %}<h3></h3>{% endblock %}
                     </div>
 
                 </div>
@@ -268,12 +247,7 @@
 
         <!-- footer content -->
         {% block footer %}
-            <footer>
-                <div class="pull-right">
-                    Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
-                </div>
-                <div class="clearfix"></div>
-            </footer>
+           
         {% endblock %}
         <!-- /footer content -->
     </div>
