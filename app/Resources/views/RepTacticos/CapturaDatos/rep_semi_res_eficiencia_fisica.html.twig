@@ -9,6 +9,7 @@
         <div class="x_content">
             <br/>
             {{  form_start(form, {'attr': {'class' : 'form-horizontal'}}) }}
+            {{ form_errors(form, {'attr' : {'class' : 'alert alert-danger', 'role' : 'alert' }}) }}
             <div class="form-group col-md-12 col-sm-12 col-xs-12">
                 {{ form_label(form.periodo, 'Período: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
                 <div class="col-md-12">
@@ -55,11 +56,31 @@
             <div class="form-group"></div>
             <div class="ln_solid"></div>
             <div class="form-group">
-                <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-1">
-                    {{ form_widget(form.send, {'attr' : {'class' : "btn btn-success" }}) }}
+                <div class="col-md-4 col-sm-4 col-xs-12">
+                    {{ form_widget(form.send, {'attr' : {'class' : "btn btn-primary" }}) }}
+                </div>
+                <div class="col-md-4 col-sm-4 col-xs-12">
+                    <button type="button" class="btn btn-default">Anterior</button>
+                </div>
+                <div class="col-md-4 col-sm-4 col-xs-12">
+                    <button type="reset" class="btn btn-danger">Limpiar</button>
                 </div>
             </div>
-            {{ form_end(form) }}
+            <br/>
+            {% if data is defined %}
+                {% block previewTable %}
+
+                {% endblock previewTable %}
+                <div class="form-group">
+                    <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-1">
+                        {{ form_widget(form.pdf, {'attr' : {'class' : "btn btn-success" }}) }}
+                    </div>
+                </div>
+            {% else %}
+                <h3>No existen datos para estos parámetros</h3>
+            {% endif %}
+            {{ form_widget((form._token)) }}
+            {{ form_end(form, {'render_rest': false}) }}
         </div>
     </div>
 

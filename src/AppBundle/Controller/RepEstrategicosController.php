@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -88,8 +89,12 @@ class RepEstrategicosController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
-            $conn = $this->getDoctrine()->getManager()->getConnection();
-            $stmntConsumido = $conn->prepare("SELECT micro.anio, (FLOOR((micro.mes -1 ) / :periodo) + 1) periodo, 
+            $diff = ($data["anioFin"] * 12 + array_search($data["mesFin"], $this->meses))
+                - ($data["anioInicio"] * 12 + array_search($data["mesInicio"], $this->meses));
+
+            if ($diff >= 0) {
+                $conn = $this->getDoctrine()->getManager()->getConnection();
+                $stmntConsumido = $conn->prepare("SELECT micro.anio, (FLOOR((micro.mes -1 ) / :periodo) + 1) periodo, 
                                               SUM(micro.total_consumo) consumido
                                               FROM res_micromediciones micro
                                               WHERE (micro.anio * 12 + micro.mes) >= (:anioInicio * 12 + :mesInicio) AND 
@@ -97,7 +102,7 @@ class RepEstrategicosController extends Controller
                                               GROUP BY micro.anio, FLOOR((micro.mes - 1) / :periodo)
                                               ORDER BY micro.anio, periodo");
 
-            $stmntExtraido = $conn->prepare("SELECT macro.anio, (FLOOR((macro.mes -1 ) / :periodo) + 1) periodo, 
+                $stmntExtraido = $conn->prepare("SELECT macro.anio, (FLOOR((macro.mes -1 ) / :periodo) + 1) periodo, 
                                             SUM(macro.total_extraido) extraido
                                             FROM res_macromedicion macro
                                             WHERE (macro.anio * 12 + macro.mes) >= (:anioInicio * 12 + :mesInicio) AND 
@@ -105,7 +110,7 @@ class RepEstrategicosController extends Controller
                                             GROUP BY macro.anio, FLOOR((macro.mes - 1) / :periodo)
                                             ORDER BY macro.anio, periodo");
 
-            $stmntFacturacion = $conn->prepare("SELECT SUM(fac.monto_facturado) facturado, 
+                $stmntFacturacion = $conn->prepare("SELECT SUM(fac.monto_facturado) facturado, 
                                                 SUM(fac.monto_recaudado) recaudado, fac.anio, 
                                                 (FLOOR((fac.mes -1 ) / :periodo) + 1) periodo
                                                 FROM res_facturacion fac
@@ -114,89 +119,91 @@ class RepEstrategicosController extends Controller
                                                 GROUP BY fac.anio, FLOOR((fac.mes - 1) / :periodo)
                                                 ORDER BY  fac.anio, periodo;");
 
-            $stmntConsumido->bindValue("periodo", $data["periodo"]);
-            $stmntConsumido->bindValue("anioInicio", $data["anioInicio"]);
-            $stmntConsumido->bindValue("mesInicio", $data["mesInicio"]);
-            $stmntConsumido->bindValue("anioFin", $data["anioFin"]);
-            $stmntConsumido->bindValue("mesFin", $data["mesFin"]);
+                $stmntConsumido->bindValue("periodo", $data["periodo"]);
+                $stmntConsumido->bindValue("anioInicio", $data["anioInicio"]);
+                $stmntConsumido->bindValue("mesInicio", $data["mesInicio"]);
+                $stmntConsumido->bindValue("anioFin", $data["anioFin"]);
+                $stmntConsumido->bindValue("mesFin", $data["mesFin"]);
 
-            $stmntExtraido->bindValue("periodo", $data["periodo"]);
-            $stmntExtraido->bindValue("anioInicio", $data["anioInicio"]);
-            $stmntExtraido->bindValue("mesInicio", $data["mesInicio"]);
-            $stmntExtraido->bindValue("anioFin", $data["anioFin"]);
-            $stmntExtraido->bindValue("mesFin", $data["mesFin"]);
+                $stmntExtraido->bindValue("periodo", $data["periodo"]);
+                $stmntExtraido->bindValue("anioInicio", $data["anioInicio"]);
+                $stmntExtraido->bindValue("mesInicio", $data["mesInicio"]);
+                $stmntExtraido->bindValue("anioFin", $data["anioFin"]);
+                $stmntExtraido->bindValue("mesFin", $data["mesFin"]);
 
-            $stmntFacturacion->bindValue("periodo", $data["periodo"]);
-            $stmntFacturacion->bindValue("anioInicio", $data["anioInicio"]);
-            $stmntFacturacion->bindValue("mesInicio", $data["mesInicio"]);
-            $stmntFacturacion->bindValue("anioFin", $data["anioFin"]);
-            $stmntFacturacion->bindValue("mesFin", $data["mesFin"]);
+                $stmntFacturacion->bindValue("periodo", $data["periodo"]);
+                $stmntFacturacion->bindValue("anioInicio", $data["anioInicio"]);
+                $stmntFacturacion->bindValue("mesInicio", $data["mesInicio"]);
+                $stmntFacturacion->bindValue("anioFin", $data["anioFin"]);
+                $stmntFacturacion->bindValue("mesFin", $data["mesFin"]);
 
-            $stmntFacturacion->execute();
-            $stmntExtraido->execute();
-            $stmntConsumido->execute();
+                $stmntFacturacion->execute();
+                $stmntExtraido->execute();
+                $stmntConsumido->execute();
 
-            $resultConsumido = $stmntConsumido->fetchAll();
-            $resultExtraido = $stmntExtraido->fetchAll();
-            $resultFacturacion = $stmntFacturacion->fetchAll();
+                $resultConsumido = $stmntConsumido->fetchAll();
+                $resultExtraido = $stmntExtraido->fetchAll();
+                $resultFacturacion = $stmntFacturacion->fetchAll();
 
-            $res = array();
+                $res = array();
 
-            for ($i = 0; $i < count($resultConsumido); $i++)
-            {
-                $comercial = $resultFacturacion[$i]["recaudado"] / $resultFacturacion[$i]["facturado"];
-                $fisica = $resultConsumido[$i]["consumido"] / $resultExtraido[$i]["extraido"];
-                $global = $fisica * $comercial;
+                for ($i = 0; $i < count($resultConsumido); $i++) {
+                    $comercial = $resultFacturacion[$i]["recaudado"] / $resultFacturacion[$i]["facturado"];
+                    $fisica = $resultConsumido[$i]["consumido"] / $resultExtraido[$i]["extraido"];
+                    $global = $fisica * $comercial;
 
-                $res[] = array("facturado" => $resultFacturacion[$i]["facturado"],
-                    "recaudado" => $resultFacturacion[$i]["recaudado"], "comercial" => $comercial,
-                    "global" => $global, "periodo" => $resultFacturacion[$i]["periodo"],
-                    "anio" => $resultFacturacion[$i]["anio"]);
+                    $res[] = array("facturado" => $resultFacturacion[$i]["facturado"],
+                        "recaudado" => $resultFacturacion[$i]["recaudado"], "comercial" => $comercial,
+                        "global" => $global, "periodo" => $resultFacturacion[$i]["periodo"],
+                        "anio" => $resultFacturacion[$i]["anio"]);
+                }
+
+                $tipoPeriodo = "Ninguno";
+                if ($data["periodo"] == 1) {
+                    $tipoPeriodo = "Mes";
+                } elseif ($data["periodo"] == 3) {
+                    $tipoPeriodo = "Trimestre";
+                } elseif ($data["periodo"] == 6) {
+                    $tipoPeriodo = "Semestre";
+                } elseif ($data["periodo"] == 12) {
+                    $tipoPeriodo = "Año";
+                }
+
+                $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
+                $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
+                $now = date("d/m/Y");
+
+                if ($form->get("pdf")->isClicked()) {
+
+                    $snappy = $this->get("knp_snappy.pdf");
+                    $html = $this->renderView("RepEstrategicos/Reportes/reporte_eficiencia_global_fisca.html.twig",
+                        array("data" => $res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
+                            "periodoInicio" => $periodoInicio, "periodoFin" => $periodoFin));
+
+                    $filename = "reportePDF";
+
+                    return new Response(
+                        $snappy->getOutputFromHtml($html),
+                        200,
+                        array(
+                            'Content-Type' => 'application/pdf',
+                            'Content-Disposition' => 'inline; filename="' . $filename . '.pdf"'
+                        )
+                    );
+                } else if ($form->get("send")->isClicked()) {
+                    return $this->render('RepEstrategicos/CapturaDatos/PreviewTables/preview_eficiencia_com_glo.html.twig', array(
+                        'form' => $form->createView(), "pageHeader" => "Reporte de Indicadores de Eficiencia Global y Comercial",
+                        "data" => $res, "tipoPeriodo" => $tipoPeriodo
+                    ));
+                }
+
             }
-
-            $tipoPeriodo = "Ninguno";
-            if ($data["periodo"] == 1){
-                $tipoPeriodo = "Mes";
-            }
-            elseif ($data["periodo"] == 3){
-                $tipoPeriodo = "Trimestre";
-            }
-            elseif ($data["periodo"] == 6){
-                $tipoPeriodo = "Semestre";
-            }
-            elseif ($data["periodo"] == 12){
-                $tipoPeriodo = "Año";
-            }
-
-            $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
-            $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
-            $now = date("d/m/Y");
-
-            if ($form->get("pdf")->isClicked()) {
-
-                $snappy = $this->get("knp_snappy.pdf");
-                $html = $this->renderView("RepEstrategicos/Reportes/reporte_eficiencia_global_fisca.html.twig",
-                    array("data"=>$res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
-                        "periodoInicio"=> $periodoInicio, "periodoFin" => $periodoFin));
-
-                $filename = "reportePDF";
-
-                return new Response(
-                    $snappy->getOutputFromHtml($html),
-                    200,
-                    array(
-                        'Content-Type'          => 'application/pdf',
-                        'Content-Disposition'   => 'inline; filename="'.$filename.'.pdf"'
-                    )
-                );
-            }
-            else if ($form->get("send")->isClicked()) {
-                return $this->render('RepEstrategicos/CapturaDatos/PreviewTables/preview_eficiencia_com_glo.html.twig', array(
-                    'form' => $form->createView(), "pageHeader" => "Reporte de Indicadores de Eficiencia Global y Comercial",
-                    "data" => $res, "tipoPeriodo" => $tipoPeriodo
+            else{
+                $form->addError(new FormError("La fecha de inicio no puede ser mayor a la fecha de Fin"));
+                return $this->render('RepEstrategicos/CapturaDatos/rep_res_eficiencia_com_glo.html.twig', array(
+                    'form' => $form->createView(), "pageHeader" => "Reporte de Indicadores de Eficiencia Global y Comercial"
                 ));
             }
-
         }
 
         return $this->render('RepEstrategicos/CapturaDatos/rep_res_eficiencia_com_glo.html.twig', array(
