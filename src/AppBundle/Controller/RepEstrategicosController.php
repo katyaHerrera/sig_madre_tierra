@@ -212,6 +212,16 @@ class RepEstrategicosController extends Controller
 
     }
 
+
+
+
+
+
+
+
+
+
+
     /**
      * @Route("/indicador-rentabilidad", name="rentabilidad")
      * @Method({"GET", "POST"})
@@ -266,6 +276,13 @@ class RepEstrategicosController extends Controller
         ));
     }
 
+
+
+
+
+
+
+
     /**
      * @Route("/cont-servicio", name="cont_servicio")
      * @Method({"GET", "POST"})
@@ -273,7 +290,7 @@ class RepEstrategicosController extends Controller
     public function contServicioAction(Request $request){
         $manager = $this->getDoctrine()->getManager();
         $conn = $manager->getConnection();
-        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM dbtransaccional.sectores");
+        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM transaccional.sectores");
         $stmnt->execute();
 
         $result = $stmnt->fetchAll();
@@ -302,7 +319,7 @@ class RepEstrategicosController extends Controller
             ->add('anioInicio', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de inicio")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )
@@ -314,11 +331,15 @@ class RepEstrategicosController extends Controller
             ->add('anioFin', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de fin")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )))
-            ->add('send', SubmitType::class, array("label"=>"Enviar"))
+
+
+
+            ->add('send', SubmitType::class, array("label"=>"Preview"))
+            ->add('pdf', SubmitType::class, array("label" => "Crear PDF"))
             ->getForm();
 
         $form->handleRequest($request);
@@ -326,12 +347,104 @@ class RepEstrategicosController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
+            $conn = $this->getDoctrine()->getManager()->getConnection();
+            $stmntContServicio = $conn->prepare("SELECT (sum(ra.serv_continuo)/:periodo) continuidad, ra.anio, (FLOOR((ra.mes -1 ) / :periodo) + 1) periodo
+                                             
+                                              FROM res_acometidas ra
+                                              WHERE (ra.anio * 12 + ra.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (ra.anio * 12 + ra.mes) <= (:anioFin * 12 + :mesFin) AND ra.sector=:sector
+                                              GROUP BY ra.anio, FLOOR((ra.mes - 1) / :periodo)
+                                              ORDER BY ra.anio, periodo");
+
+
+
+            $stmntContServicio->bindValue("periodo", $data["periodo"]);
+            $stmntContServicio->bindValue("anioInicio", $data["anioInicio"]);
+            $stmntContServicio->bindValue("mesInicio", $data["mesInicio"]);
+            $stmntContServicio->bindValue("anioFin", $data["anioFin"]);
+            $stmntContServicio->bindValue("mesFin", $data["mesFin"]);
+            $stmntContServicio->bindValue("sector", $data["sector"]);
+
+
+            $stmntContServicio->execute();
+
+            $resultContServicio = $stmntContServicio->fetchAll();
+
+
+            $res = array();
+
+            for ($i = 0; $i < count( $resultContServicio); $i++)
+            {
+
+
+                $res[] = array("continuo" => $resultContServicio[$i]["continuidad"],
+                     "periodo" =>$resultContServicio[$i]["periodo"],
+                    "anio" => $resultContServicio[$i]["anio"]);
+            }
+
+            $tipoPeriodo = "Ninguno";
+            if ($data["periodo"] == 1){
+                $tipoPeriodo = "Mes";
+            }
+            elseif ($data["periodo"] == 3){
+                $tipoPeriodo = "Trimestre";
+            }
+            elseif ($data["periodo"] == 6){
+                $tipoPeriodo = "Semestre";
+            }
+            elseif ($data["periodo"] == 12){
+                $tipoPeriodo = "Año";
+            }
+
+            $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
+            $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
+            $now = date("d/m/Y");
+
+            if ($form->get("pdf")->isClicked()) {
+
+                $snappy = $this->get("knp_snappy.pdf");
+                $html = $this->renderView("RepEstrategicos/Reportes/reporte_continuidad_servicio.html.twig",
+                    array("data"=>$res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
+                        "periodoInicio"=> $periodoInicio, "periodoFin" => $periodoFin));
+
+                $filename = "reportePDF";
+
+                return new Response(
+                    $snappy->getOutputFromHtml($html),
+                    200,
+                    array(
+                        'Content-Type'          => 'application/pdf',
+                        'Content-Disposition'   => 'inline; filename="'.$filename.'.pdf"'
+                    )
+                );
+            }
+            else if ($form->get("send")->isClicked()) {
+                return $this->render('RepEstrategicos/CapturaDatos/PreviewTables/preview_continuidad_servicio.html.twig', array(
+                    'form' => $form->createView(), "pageHeader" => "Reporte de continuidad de servicio",
+                    "data" => $res, "tipoPeriodo" => $tipoPeriodo
+                ));
+            }
+
         }
+
 
         return $this->render('RepEstrategicos/CapturaDatos/rep_cont_servicio.html.twig', array(
             'form' => $form->createView(), "pageHeader" => "Reporte de Indicador de Continuidad del Servicio"
         ));
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * @Route("/cob-micromedicion", name="cob_micromedicion")
