@@ -522,7 +522,7 @@ class RepEstrategicosController extends Controller
     public function respReclamosAction(Request $request){
         $manager = $this->getDoctrine()->getManager();
         $conn = $manager->getConnection();
-        $stmnt = $conn->prepare("SELECT id_tipo_reclamo, descripcion FROM dbtransaccional.tipo_reclamos");
+        $stmnt = $conn->prepare("SELECT id_tipo_reclamo, descripcion FROM transaccional.tipo_reclamos");
         $stmnt->execute();
 
         $result = $stmnt->fetchAll();
@@ -551,7 +551,7 @@ class RepEstrategicosController extends Controller
             ->add('anioInicio', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de inicio")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )
@@ -563,22 +563,117 @@ class RepEstrategicosController extends Controller
             ->add('anioFin', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de fin")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )))
-            ->add('send', SubmitType::class, array("label"=>"Enviar"))
+            ->add('pdf', SubmitType::class, array("label" => "Crear PDF"))
+            ->add('send', SubmitType::class, array("label"=>"Preview"))
             ->getForm();
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
+
             $data = $form->getData();
+            $conn = $this->getDoctrine()->getManager()->getConnection();
+            $stmntContServicio = $conn->prepare("SELECT (sum(rr.total_soluciones)) soluciones, (sum(rr.solucion_tiempo)) aTiempo, sum(rr.pendientes) pendientes,
+                                              tr.descripcion,tr.tiempo_atencion, rr.anio, (FLOOR((rr.mes -1 ) / :periodo) + 1) periodo
+                                             
+                                              FROM res_reclamos rr INNER JOIN transaccional.tipo_reclamos tr ON rr.tipo_reclamo=tr.id_tipo_reclamo
+                                              WHERE (rr.anio * 12 + rr.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (rr.anio * 12 + rr.mes) <= (:anioFin * 12 + :mesFin) AND rr.tipo_reclamo=:tipo_reclamo
+                                              GROUP BY rr.tipo_reclamo
+                                              ORDER BY rr.anio, periodo");
+
+
+
+            $stmntContServicio->bindValue("periodo", $data["periodo"]);
+            $stmntContServicio->bindValue("anioInicio", $data["anioInicio"]);
+            $stmntContServicio->bindValue("mesInicio", $data["mesInicio"]);
+            $stmntContServicio->bindValue("anioFin", $data["anioFin"]);
+            $stmntContServicio->bindValue("mesFin", $data["mesFin"]);
+            $stmntContServicio->bindValue("tipo_reclamo", $data["tipo_reclamo"]);
+
+
+            $stmntContServicio->execute();
+
+            $resultContServicio = $stmntContServicio->fetchAll();
+
+
+            $res = array();
+
+            for ($i = 0; $i < count( $resultContServicio); $i++)
+            {
+                $soluciones=$resultContServicio[$i]["soluciones"];
+                $aTiempo=$resultContServicio[$i]["aTiempo"];
+                $pendientes=$resultContServicio[$i]["pendientes"];
+                $indicador=$aTiempo/$soluciones;
+                $reclamos=$soluciones+$pendientes;
+
+                $tipo_reclamo=$resultContServicio[$i]["descripcion"];
+
+                $res[] = array(
+                    "periodo" =>$resultContServicio[$i]["periodo"],
+                    "anio" => $resultContServicio[$i]["anio"],
+                    "indicador"=>$indicador,
+                    "pendientes"=>$pendientes,
+                    "total"=>$reclamos,
+                    "solucionados"=>$reclamos,
+                     );
+
+            }
+
+            $tipoPeriodo = "Ninguno";
+            if ($data["periodo"] == 1){
+                $tipoPeriodo = "Mes";
+            }
+            elseif ($data["periodo"] == 3){
+                $tipoPeriodo = "Trimestre";
+            }
+            elseif ($data["periodo"] == 6){
+                $tipoPeriodo = "Semestre";
+            }
+            elseif ($data["periodo"] == 12){
+                $tipoPeriodo = "Año";
+            }
+
+            $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
+            $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
+            $now = date("d/m/Y");
+
+            if ($form->get("pdf")->isClicked()) {
+
+                $snappy = $this->get("knp_snappy.pdf");
+                $html = $this->renderView("RepEstrategicos/Reportes/reporte_reclamos.html.twig",
+                    array("data"=>$res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
+                        "periodoInicio"=> $periodoInicio, "periodoFin" => $periodoFin, "tipoPeriodo" => $tipoPeriodo,"tipoReclamo"=>$tipo_reclamo,));
+
+                $filename = "reportePDF";
+
+                return new Response(
+                    $snappy->getOutputFromHtml($html),
+                    200,
+                    array(
+                        'Content-Type'          => 'application/pdf',
+                        'Content-Disposition'   => 'inline; filename="'.$filename.'.pdf"'
+                    )
+                );
+            }
+            else if ($form->get("send")->isClicked()) {
+                return $this->render('RepEstrategicos/CapturaDatos/PreviewTables/preview_reclamos.html.twig', array(
+                    'form' => $form->createView(), "pageHeader" => "Reporte de indicador de tiempo de respuesta a reclamos",
+                    "data" => $res,
+                    "tipoReclamo"=>$tipo_reclamo,
+                    "tipoPeriodo" => $tipoPeriodo
+                ));
+            }
+
         }
 
         return $this->render('RepEstrategicos/CapturaDatos/rep_resp_reclamos.html.twig', array(
-            'form' => $form->createView(), "pageHeader" => "Reporte de Indicador de Tiempo de Respuesta a Reclamos"
+            'form' => $form->createView(),  "pageHeader" => "Reporte de Indicador de Tiempo de Respuesta a Reclamos"
         ));
     }
 
