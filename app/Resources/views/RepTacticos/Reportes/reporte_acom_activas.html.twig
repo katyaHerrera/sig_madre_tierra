@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+</head>
+<body>
+<style>
+    table#data, table#data tr, table#data td, table#data th{
+        text-align: center;
+        border: 1px solid lightsteelblue;
+        border-collapse: collapse;
+    }
+</style>
+<table>
+    <tr>
+        <td>
+            <p>Fecha de Emisión:</p>
+            <p>{{ today }}</p>
+        </td>
+        <td>
+            <p><h2>&nbsp;&nbsp;&nbsp;&nbsp;Desarrolladora Madre Tierra S.A de C.V&nbsp;&nbsp;&nbsp;&nbsp;</h2></p>
+        </td>
+        <td>
+            <p>Usuario: </p>
+            <p>{{ app.user.username }}</p>
+        </td>
+    </tr>
+</table>
+<h3>Reporte de Eficiencia Fisica</h3>
+<span>Desde: <strong>{{ periodoInicio}}</strong></span>
+&nbsp;&nbsp;
+<span>Hasta: <strong>{{ periodoFin }}</strong></span>
+{% if (sector==0) %}
+
+    {% set  sec="Todos" %}
+{% else %}
+    {% set sec=sector %}
+{% endif %}
+<span>Sector <strong>{{ sec }}</strong></span>
+<br/>
+<table id="data">
+    <thead>
+    <tr>
+        <th>No.</th>
+        <th>Periodo</th>
+        <th>Acometidas activas</th>
+        <th>Acometidas existentes</th>
+        <th>Porcentaje de acometivas activas</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for row in data %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{% if tipoPeriodo == "Mes" %}
+                    {% if row.periodo == 1 %}
+                        {{ "Enero "  ~ row.anio }}
+                    {% elseif row.periodo == 2 %}
+                        {{ "Febrero " ~ row.anio }}
+                    {% elseif row.periodo == 3 %}
+                        {{ "Marzo " ~ row.anio }}
+                    {% elseif row.periodo == 4 %}
+                        {{ "Abril " ~ row.anio  }}
+                    {% elseif row.periodo == 5 %}
+                        {{ "Mayo " ~ row.anio }}
+                    {% elseif row.periodo == 6 %}
+                        {{ "Junio" ~ row.anio }}
+                    {% elseif row.periodo == 7 %}
+                        {{ "Julio" ~ row.anio }}
+                    {% elseif row.periodo == 8 %}
+                        {{ "Agosto" ~ row.anio }}
+                    {% elseif row.periodo == 9 %}
+                        {{ "Septiembre" ~ row.anio }}
+                    {% elseif row.periodo == 10 %}
+                        {{ "Octubre" ~ row.anio }}
+                    {% elseif row.periodo == 11 %}
+                        {{ "Noviembre" ~ row.anio }}
+                    {% elseif row.periodo == 12 %}
+                        {{ "Diciembre" ~ row.anio }}
+                    {% endif %}
+                {% else %}
+                    {{ row.periodo ~ "° " ~ tipoPeriodo ~ " " ~ row.anio }}
+                {% endif %}
+            </td>
+            <td>{{"%.2f" | format(row.acomActivas)  }}</td>
+            <td>{{"%.0f" | format(row.acomExistentes)  }}</td>
+            <td>{{"%.2f" | format(row.porAcometidas * 100) ~ "%"   }}</td>
+
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</body>
