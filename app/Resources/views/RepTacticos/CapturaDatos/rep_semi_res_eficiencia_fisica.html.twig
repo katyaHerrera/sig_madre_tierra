@@ -68,6 +68,7 @@
             </div>
             <br/>
             {% if data is defined %}
+                {% if data | length > 0 %}
                 {% block previewTable %}
 
                 {% endblock previewTable %}
@@ -76,8 +77,9 @@
                         {{ form_widget(form.pdf, {'attr' : {'class' : "btn btn-success" }}) }}
                     </div>
                 </div>
-            {% else %}
+                {% else %}
                 <h3>No existen datos para estos parámetros</h3>
+                {% endif %}
             {% endif %}
             {{ form_widget((form._token)) }}
             {{ form_end(form, {'render_rest': false}) }}

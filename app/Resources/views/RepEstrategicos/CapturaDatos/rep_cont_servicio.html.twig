@@ -9,67 +9,90 @@
         <div class="x_content">
             <br/>
             {{  form_start(form, {'attr': {'class' : 'form-horizontal'}}) }}
-            <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                {{ form_label(form.sector, 'Sector: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
-                <div class="col-md-12">
-                    <div class="col-md-6 col-sm-6 col-xs-12">
-                        {{ form_widget(form.sector, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
-                    </div>
-                </div>
-                {{ form_errors(form.sector, {'attr' : {'class' : 'alert'}}) }}
-
-            </div>
-            <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                {{ form_label(form.periodo, 'Período: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
-                <div class="col-md-12">
-                    <div class="col-md-6 col-sm-6 col-xs-12">
-                        {{ form_widget(form.periodo, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
-                    </div>
-                </div>
-                {{ form_errors(form.periodo, {'attr' : {'class' : 'alert'}}) }}
-
-            </div>
-            <br />
-            <div class="col-md-12 col-sm-12 col-xs-12">
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                    <label class="col-md-2 col-sm-2 col-xs-2 control-label">Desde :</label>
-                    <br />
+                {{ form_errors(form, {'attr' : {'class' : 'alert alert-danger', 'role' : 'alert'} }) }}
+                <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                    {{ form_label(form.sector, 'Sector: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
                     <div class="col-md-12">
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            {{ form_widget(form.mesInicio, {'attr' : {'class' : 'form-control'}}) }}
-                        </div>
-                        <div class="form-group col-md-6 col-sm-6 col-xs-12 {% if not form.anioInicio.vars.valid %} item bad {% endif %}">
-                            <div>
-                                {{ form_widget(form.anioInicio, {'attr' : {'class' : 'form-control',  'placeholder' : 'Año Inicio'}}) }}
-                            </div>
-                            {{ form_errors(form.anioInicio, {'attr' : {'class' : 'alert'}}) }}
+                            {{ form_widget(form.sector, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
                         </div>
                     </div>
+                    {{ form_errors(form.sector, {'attr' : {'class' : 'alert'}}) }}
+
                 </div>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                    <label class="col-md-2 col-sm-2 col-xs-2 control-label">Hasta :</label>
-                    <br />
+                <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                    {{ form_label(form.periodo, 'Período: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
                     <div class="col-md-12">
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            {{ form_widget(form.mesFin, {'attr' : {'class' : 'form-control'}}) }}
+                            {{ form_widget(form.periodo, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
                         </div>
-                        <div class="form-group col-md-6 col-sm-6 col-xs-12 {% if not form.anioFin.vars.valid %} item bad {% endif %}">
-                            <div>
-                                {{ form_widget(form.anioFin, {'attr' : {'class' : 'form-control', 'placeholder' : 'Año Fin'}}) }}
+                    </div>
+                    {{ form_errors(form.periodo, {'attr' : {'class' : 'alert'}}) }}
+
+                </div>
+                <br />
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <label class="col-md-2 col-sm-2 col-xs-2 control-label">Desde :</label>
+                        <br />
+                        <div class="col-md-12">
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.mesInicio, {'attr' : {'class' : 'form-control'}}) }}
                             </div>
-                            {{ form_errors(form.anioFin, {'attr' : {'class' : 'alert'}}) }}
+                            <div class="form-group col-md-6 col-sm-6 col-xs-12 {% if not form.anioInicio.vars.valid %} item bad {% endif %}">
+                                <div>
+                                    {{ form_widget(form.anioInicio, {'attr' : {'class' : 'form-control',  'placeholder' : 'Año Inicio'}}) }}
+                                </div>
+                                {{ form_errors(form.anioInicio, {'attr' : {'class' : 'alert'}}) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 col-xs-12">
+                        <label class="col-md-2 col-sm-2 col-xs-2 control-label">Hasta :</label>
+                        <br />
+                        <div class="col-md-12">
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.mesFin, {'attr' : {'class' : 'form-control'}}) }}
+                            </div>
+                            <div class="form-group col-md-6 col-sm-6 col-xs-12 {% if not form.anioFin.vars.valid %} item bad {% endif %}">
+                                <div>
+                                    {{ form_widget(form.anioFin, {'attr' : {'class' : 'form-control', 'placeholder' : 'Año Fin'}}) }}
+                                </div>
+                                {{ form_errors(form.anioFin, {'attr' : {'class' : 'alert'}}) }}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="form-group"></div>
-            <div class="ln_solid"></div>
-            <div class="form-group">
-                <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-1">
-                    {{ form_widget(form.send, {'attr' : {'class' : "btn btn-success" }}) }}
+                <div class="form-group"></div>
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                    <div class="col-md-4 col-sm-4 col-xs-12">
+                        {{ form_widget(form.send, {'attr' : {'class' : "btn btn-primary" }}) }}
+                    </div>
+                    <div class="col-md-4 col-sm-4 col-xs-12">
+                        <button type="button" class="btn btn-default">Anterior</button>
+                    </div>
+                    <div class="col-md-4 col-sm-4 col-xs-12">
+                        <button type="reset" class="btn btn-danger">Limpiar</button>
+                    </div>
                 </div>
-            </div>
-            {{ form_end(form) }}
+                <br />
+                {% if data is defined %}
+                    {% if data | length > 0 %}
+                        {% block previewTable %}
+
+                        {% endblock previewTable %}
+                        <div class="form-group">
+                            <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-1">
+                                {{ form_widget(form.pdf, {'attr' : {'class' : "btn btn-success" }}) }}
+                            </div>
+                        </div>
+                    {% else %}
+                        <h3>No existen datos para estos parámetros</h3>
+                    {% endif %}
+                {% endif %}
+                {{ form_widget((form._token)) }}
+            {{ form_end(form, {'render_rest': false}) }}
         </div>
     </div>
 

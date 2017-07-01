@@ -8,16 +8,16 @@
         </div>
         <div class="x_content">
             <br/>
-           {{  form_start(form, {'attr': {'class' : 'form-horizontal'}}) }}
-            {{ form_errors(form, {'attr' : {'class' : 'alert alert-danger'}, {'role' : 'alert'} }) }}
+            {{  form_start(form, {'attr': {'class' : 'form-horizontal'}}) }}
+            {{ form_errors(form, {'attr' : {'class' : 'alert alert-danger', 'role' : 'alert' }}) }}
             <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                {{ form_label(form.periodo, 'Período: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
+                {{ form_label(form.sector, 'Sector: ', {'label_attr' : {'class' : 'control-label col-md-1 col-sm-1 col-xs-12'}}) }}
                 <div class="col-md-12">
                     <div class="col-md-6 col-sm-6 col-xs-12">
-                        {{ form_widget(form.periodo, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
+                        {{ form_widget(form.sector, {'attr' : {'class' : 'form-control col-md-7 col-xs-12'}}) }}
                     </div>
                 </div>
-                {{ form_errors(form.periodo, {'attr' : {'class' : 'alert'}}) }}
+                {{ form_errors(form.sector, {'attr' : {'class' : 'alert'}}) }}
 
             </div>
             <br />
@@ -69,9 +69,34 @@
             <br />
             {% if data is defined %}
                 {% if data | length > 0 %}
-                    {% block previewTable %}
-
-                    {% endblock previewTable %}
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Nombre Cliente</th>
+                                    <th>Tipo Cliente</th>
+                                    <th>Sector</th>
+                                    <th>Consumo(M³)</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in data %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ row.nombreCliente }}</td>
+                                        <td>{{ row.tipoCliente }}</td>
+                                        {% if row.sector is defined %}
+                                        <td>{{ row.sector }}</td>
+                                        {% endif %}
+                                        <td>{{ row.consumo }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-1">
                             {{ form_widget(form.pdf, {'attr' : {'class' : "btn btn-success" }}) }}
@@ -83,7 +108,6 @@
             {% endif %}
             {{ form_widget((form._token)) }}
             {{ form_end(form, {'render_rest': false}) }}
-
         </div>
     </div>
 

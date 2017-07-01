@@ -89,8 +89,8 @@ class RepEstrategicosController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
-            $diff = ($data["anioFin"] * 12 + array_search($data["mesFin"], $this->meses))
-                - ($data["anioInicio"] * 12 + array_search($data["mesInicio"], $this->meses));
+            $diff = ($data["anioFin"] * 12 + $data["mesFin"])
+                - ($data["anioInicio"] * 12 + $data["mesInicio"]);
 
             if ($diff >= 0) {
                 $conn = $this->getDoctrine()->getManager()->getConnection();
@@ -326,6 +326,7 @@ class RepEstrategicosController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
+
         }
 
         return $this->render('RepEstrategicos/CapturaDatos/rep_cont_servicio.html.twig', array(
@@ -370,7 +371,7 @@ class RepEstrategicosController extends Controller
             ->add('anioInicio', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de inicio")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )
@@ -382,11 +383,12 @@ class RepEstrategicosController extends Controller
             ->add('anioFin', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de fin")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )))
             ->add('send', SubmitType::class, array("label"=>"Enviar"))
+            ->add('pdf', SubmitType::class, array("label" => "Crear PDF"))
             ->getForm();
 
         $form->handleRequest($request);
@@ -394,6 +396,100 @@ class RepEstrategicosController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
+            $diff = ($data["anioFin"] * 12 + $data["mesFin"])
+                - ($data["anioInicio"] * 12 + $data["mesInicio"]);
+
+            if ($diff >= 0) {
+                $conn = $this->getDoctrine()->getManager()->getConnection();
+                $query = "SELECT AVG(ac.cub_micro / ac.acom_exist) cobertura, ac.anio, 
+                          (FLOOR((ac.mes -1 ) / :periodo) + 1) periodo, s.nombre_sector FROM res_acometidas ac
+                          INNER JOIN dbtransaccional.sectores s ON ac.sector = s.id_sector
+                          WHERE (ac.anio * 12 + ac.mes) >= (:anioInicio*12 + :mesInicio) AND 
+                          (ac.anio * 12 + ac.mes) <= (:anioFin*12 + :mesFin)";
+                if ($data["sector"] != 0)
+                {
+                    $query .= " AND s.id_sector = :sector ";
+                }
+
+                $query .= "GROUP BY ac.anio, FLOOR((ac.mes - 1) / 1), s.nombre_sector
+                          ORDER BY ac.anio, periodo";
+
+                $stmntCobertura = $conn->prepare($query);
+
+
+                $stmntCobertura->bindValue("periodo", $data["periodo"]);
+                $stmntCobertura->bindValue("anioInicio", $data["anioInicio"]);
+                $stmntCobertura->bindValue("mesInicio", $data["mesInicio"]);
+                $stmntCobertura->bindValue("anioFin", $data["anioFin"]);
+                $stmntCobertura->bindValue("mesFin", $data["mesFin"]);
+
+                if ($data["sector"] != 0)
+                {
+                    $stmntCobertura->bindValue("sector", $data["sector"]);
+                }
+
+
+                $stmntCobertura->execute();
+
+                $resultCobertura = $stmntCobertura->fetchAll();
+
+
+                $res = array();
+
+                for ($i = 0; $i < count($resultCobertura); $i++) {
+
+                    $res[] = array("sector" => $resultCobertura[$i]["nombre_sector"],
+                        "cobertura" => $resultCobertura[$i]["cobertura"],
+                        "periodo" => $resultCobertura[$i]["periodo"],
+                        "anio" => $resultCobertura[$i]["anio"]);
+                }
+
+                $tipoPeriodo = "Ninguno";
+                if ($data["periodo"] == 1) {
+                    $tipoPeriodo = "Mes";
+                } elseif ($data["periodo"] == 3) {
+                    $tipoPeriodo = "Trimestre";
+                } elseif ($data["periodo"] == 6) {
+                    $tipoPeriodo = "Semestre";
+                } elseif ($data["periodo"] == 12) {
+                    $tipoPeriodo = "Año";
+                }
+
+                $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
+                $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
+                $now = date("d/m/Y");
+
+                if ($form->get("pdf")->isClicked()) {
+
+                    $snappy = $this->get("knp_snappy.pdf");
+                    $html = $this->renderView("RepEstrategicos/Reportes/reporte_cobertura.html.twig",
+                        array("data" => $res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
+                            "periodoInicio" => $periodoInicio, "periodoFin" => $periodoFin));
+
+                    $filename = "reportePDF";
+
+                    return new Response(
+                        $snappy->getOutputFromHtml($html),
+                        200,
+                        array(
+                            'Content-Type' => 'application/pdf',
+                            'Content-Disposition' => 'inline; filename="' . $filename . '.pdf"'
+                        )
+                    );
+                } else if ($form->get("send")->isClicked()) {
+                    return $this->render('RepEstrategicos/CapturaDatos/PreviewTables/preview_micromedicion_html.twig', array(
+                        'form' => $form->createView(), "pageHeader" => "Reporte de Indicadores de Cobertura de Micromedición",
+                        "data" => $res, "tipoPeriodo" => $tipoPeriodo
+                    ));
+                }
+
+            }
+            else{
+                $form->addError(new FormError("La fecha de inicio no puede ser mayor a la fecha de Fin"));
+                return $this->render('RepEstrategicos/CapturaDatos/rep_res_eficiencia_com_glo.html.twig', array(
+                    'form' => $form->createView(), "pageHeader" => "Reporte de Indicadores de Eficiencia Global y Comercial"
+                ));
+            }
         }
 
         return $this->render('RepEstrategicos/CapturaDatos/rep_cont_servicio.html.twig', array(
