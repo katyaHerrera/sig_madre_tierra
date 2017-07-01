@@ -17,6 +17,11 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
 
+
+
+
+
+
 /**
  * @Route("/reportes-tacticos")
  */
@@ -40,6 +45,14 @@ class RepTacticosController extends Controller
         return $this->render('', array('name' => $name));
     }
 
+
+
+
+
+
+
+
+
     /**
      * @Route("/consumo-agua", name="consumo_agua")
      * @Method({"GET", "POST"})
@@ -47,13 +60,45 @@ class RepTacticosController extends Controller
     public function consumoAguaAction(Request $request){
         $manager = $this->getDoctrine()->getManager();
         $conn = $manager->getConnection();
+<<<<<<< HEAD
         $stmnt = $conn->prepare("SELECT id_tarifa, CONCAT(consumo_min, '-', consumo_max) rango FROM 
-dbtransaccional.tarifas");
+transaccional.tarifas");
+=======
+
+
+
+        $stmnt = $conn->prepare("SELECT id_tarifa, CONCAT('$',cobro, '  (', consumo_min, 'm3 -', consumo_max, 'm3)') rango FROM 
+transaccional.tarifas where tipo_conexion=1");
+>>>>>>> origin/master
         $stmnt->execute();
 
         $result = $stmnt->fetchAll();
 
         $tarifas = array_combine(array_column($result, "rango"), array_column($result, "id_tarifa"));
+
+
+
+
+
+
+
+
+
+        $stmnt2 = $conn->prepare("SELECT id_tarifa, CONCAT('$',cobro, '  (', consumo_min, 'm3 -', consumo_max, 'm3)') rango FROM 
+transaccional.tarifas where tipo_conexion=2");
+        $stmnt2->execute();
+
+        $result2 = $stmnt2->fetchAll();
+
+        $tarifas2 = array_combine(array_column($result2, "rango"), array_column($result2, "id_tarifa"));
+
+
+
+
+
+
+
+
 
 
         $capturaDatos = array();
@@ -74,7 +119,7 @@ dbtransaccional.tarifas");
             ->add('anioInicio', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de inicio")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )
@@ -86,25 +131,18 @@ dbtransaccional.tarifas");
             ->add('anioFin', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de fin")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )))
             ->add('tarifa', ChoiceType::class, array(
-                "choices" => $tarifas,
+                "choices" => array( 'Residenciales' =>$tarifas , 'Comerciales' =>$tarifas2),
                 "constraints" => new NotBlank(array("message" => "Por favor seleccione un rango de tarifa"))
 
             ))
-            ->add('tipo_cliente', ChoiceType::class, array(
-                "choices" => array(
-                    "Comercial" => 1,
-                    "Residencial" => 2,
-                    "Todos" => 0
-                ),
-                "expanded" => true,
-                "multiple" => false
-            ))
+
             ->add('send', SubmitType::class, array("label"=>"Enviar"))
+            ->add('pdf', SubmitType::class, array("label" => "Crear PDF"))
             ->getForm();
 
         $form->handleRequest($request);
@@ -112,6 +150,92 @@ dbtransaccional.tarifas");
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
+
+            $conn = $this->getDoctrine()->getManager()->getConnection();
+            $stmntContServicio = $conn->prepare("SELECT tp.nombre_tipo_conexion,(sum(rm.total_consumo)/:periodo) consumo, CONCAT('$',ta.cobro, '  (', ta.consumo_min, 'm3 -', ta.consumo_max, 'm3)') rango, ta.cobro, ta.tipo_conexion ,rm.anio, (FLOOR((rm.mes -1 ) / :periodo) + 1) periodo
+                                             
+                                              FROM symfony.res_micromediciones rm INNER JOIN transaccional.tarifas ta ON rm.id_tarifa=ta.id_tarifa
+                                              INNER JOIN transaccional.tipo_conexiones tp ON ta.tipo_conexion=tp.id_tipo_conexion
+                                              WHERE (rm.anio * 12 + rm.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (rm.anio * 12 + rm.mes) <= (:anioFin * 12 + :mesFin) AND ta.id_tarifa=:tarifa
+                                              GROUP BY rm.anio, FLOOR((rm.mes - 1) / :periodo)
+                                              ORDER BY rm.anio, periodo");
+
+
+
+            $stmntContServicio->bindValue("periodo", $data["periodo"]);
+            $stmntContServicio->bindValue("anioInicio", $data["anioInicio"]);
+            $stmntContServicio->bindValue("mesInicio", $data["mesInicio"]);
+            $stmntContServicio->bindValue("anioFin", $data["anioFin"]);
+            $stmntContServicio->bindValue("mesFin", $data["mesFin"]);
+            $stmntContServicio->bindValue("tarifa", $data["tarifa"]);
+
+
+            $stmntContServicio->execute();
+
+            $resultContServicio = $stmntContServicio->fetchAll();
+
+
+            $res = array();
+
+            for ($i = 0; $i < count( $resultContServicio); $i++)
+            {
+
+                $rango= $resultContServicio[$i]["rango"];
+                $tipoCon= $resultContServicio[$i]["nombre_tipo_conexion"];
+
+                $res[] = array("consumo" => $resultContServicio[$i]["consumo"],
+                    "cobro" => $resultContServicio[$i]["cobro"],
+                    "periodo" =>$resultContServicio[$i]["periodo"],
+                    "anio" => $resultContServicio[$i]["anio"]);
+            }
+
+            $tipoPeriodo = "Ninguno";
+            if ($data["periodo"] == 1){
+                $tipoPeriodo = "Mes";
+            }
+            elseif ($data["periodo"] == 3){
+                $tipoPeriodo = "Trimestre";
+            }
+            elseif ($data["periodo"] == 6){
+                $tipoPeriodo = "Semestre";
+            }
+            elseif ($data["periodo"] == 12){
+                $tipoPeriodo = "Año";
+            }
+
+            $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
+            $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
+            $now = date("d/m/Y");
+
+            if ($form->get("pdf")->isClicked()) {
+
+                $snappy = $this->get("knp_snappy.pdf");
+                $html = $this->renderView("RepTacticos/Reportes/reporte_consumo_tarifa.html.twig",
+                    array("data"=>$res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
+                        "periodoInicio"=> $periodoInicio, "periodoFin" => $periodoFin, "rango" => $rango, "con" => $tipoCon));
+
+                $filename = "reportePDF";
+
+                return new Response(
+                    $snappy->getOutputFromHtml($html),
+                    200,
+                    array(
+                        'Content-Type'          => 'application/pdf',
+                        'Content-Disposition'   => 'inline; filename="'.$filename.'.pdf"'
+                    )
+                );
+            }
+            else if ($form->get("send")->isClicked()) {
+                return $this->render('RepTacticos/CapturaDatos/PreviewTables/preview_consumo_tarifa.html.twig', array(
+                    'form' => $form->createView(), "pageHeader" => "Reporte de continuidad de servicio",
+                    "data" => $res, "tipoPeriodo" => $tipoPeriodo, "rango" => $rango, "con" => $tipoCon
+                ));
+            }
+
+
+
+
         }
 
         return $this->render('RepTacticos/CapturaDatos/rep_semi_res_consumo_agua.html.twig', array(
@@ -193,7 +317,7 @@ dbtransaccional.tarifas");
                 $stmntProblemas = $conn->prepare("SELECT SUM(rep.id_res_reporte) cantidad, rep.anio, 
                                                   (FLOOR((rep.mes -1 ) / :periodo) + 1) periodo, rep.tipo_reporte
                                                   FROM res_reportes_campo rep
-                                                  INNER JOIN dbtransaccional.tipo_reporte tipo ON 
+                                                  INNER JOIN transaccional.tipo_reporte tipo ON 
                                                   tipo.id_tipo_reporte = rep.tipo_reporte
                                                   WHERE (rep.anio * 12 + rep.mes) >= (:anioInicio * 12 + :mesInicio) 
                                                   AND (rep.anio * 12 + rep.mes) <= (:anioFin * 12 + :mesFin)
@@ -618,7 +742,7 @@ dbtransaccional.tarifas");
     public function acometidasActivasAction(Request $request){
         $manager = $this->getDoctrine()->getManager();
         $conn = $manager->getConnection();
-        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM dbtransaccional.sectores");
+        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM transaccional.sectores");
         $stmnt->execute();
 
         $result = $stmnt->fetchAll();
@@ -648,7 +772,7 @@ dbtransaccional.tarifas");
             ->add('anioInicio', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de inicio")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )
@@ -660,18 +784,153 @@ dbtransaccional.tarifas");
             ->add('anioFin', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de fin")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )))
             ->add('send', SubmitType::class, array("label"=>"Enviar"))
+            ->add('pdf', SubmitType::class, array("label" => "Crear PDF"))
             ->getForm();
+
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
+            $conn = $this->getDoctrine()->getManager()->getConnection();
+                dump($data["sector"]);
+            if($data["sector"]=="Todos"){
+                $acomActivas = $conn->prepare("SELECT acom.anio, (FLOOR((acom.mes -1 ) / :periodo) + 1) periodo, 
+                                              SUM(acom.cub_micro) acometidasActivas
+                                              FROM res_acometidas acom
+                                              WHERE (acom.anio * 12 + acom.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (acom.anio * 12 + acom.mes) <= (:anioFin * 12 + :mesFin)
+                                              GROUP BY acom.anio, FLOOR((acom.mes - 1) / :periodo)
+                                              ORDER BY acom.anio, periodo");
+                $porActivas = $conn->prepare("SELECT acom.anio, (FLOOR((acom.mes -1 ) / :periodo) + 1) periodo, 
+                                              SUM(acom.por_activa) porActivas
+                                              FROM res_acometidas acom
+                                              WHERE (acom.anio * 12 + acom.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (acom.anio * 12 + acom.mes) <= (:anioFin * 12 + :mesFin)
+                                              GROUP BY acom.anio, FLOOR((acom.mes - 1) / :periodo)
+                                              ORDER BY acom.anio, periodo");
+                $acomExit = $conn->prepare("SELECT acom.anio, (FLOOR((acom.mes -1 ) / :periodo) + 1) periodo, 
+                                              SUM(acom.acom_exist) acomExistentes
+                                              FROM res_acometidas acom
+                                              WHERE (acom.anio * 12 + acom.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (acom.anio * 12 + acom.mes) <= (:anioFin * 12 + :mesFin)
+                                              GROUP BY acom.anio, FLOOR((acom.mes - 1) / :periodo)
+                                              ORDER BY acom.anio, periodo");
+
+            }else{
+                $acomActivas = $conn->prepare("SELECT acom.anio, (FLOOR((acom.mes -1 ) / :periodo) + 1) periodo, 
+                                              SUM(acom.cub_micro) acometidasActivas
+                                              FROM res_acometidas acom
+                                              WHERE sector=:sector AND (acom.anio * 12 + acom.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (acom.anio * 12 + acom.mes) <= (:anioFin * 12 + :mesFin)
+                                              GROUP BY acom.anio, FLOOR((acom.mes - 1) / :periodo)
+                                              ORDER BY acom.anio, periodo");
+                $porActivas = $conn->prepare("SELECT acom.anio, (FLOOR((acom.mes -1 ) / :periodo) + 1) periodo, 
+                                              SUM(acom.por_activa) porActivas
+                                              FROM res_acometidas acom
+                                              WHERE sector=:sector AND (acom.anio * 12 + acom.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (acom.anio * 12 + acom.mes) <= (:anioFin * 12 + :mesFin)
+                                              GROUP BY acom.anio, FLOOR((acom.mes - 1) / :periodo)
+                                              ORDER BY acom.anio, periodo");
+                $acomExit = $conn->prepare("SELECT acom.anio, (FLOOR((acom.mes -1 ) / :periodo) + 1) periodo, 
+                                              SUM(acom.acom_exist) acomExistentes
+                                              FROM res_acometidas acom
+                                              WHERE sector=:sector AND (acom.anio * 12 + acom.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (acom.anio * 12 + acom.mes) <= (:anioFin * 12 + :mesFin)
+                                              GROUP BY acom.anio, FLOOR((acom.mes - 1) / :periodo)
+                                              ORDER BY acom.anio, periodo");
+            }
+
+            $acomActivas->bindValue("sector", $data["sector"]);
+            $acomActivas->bindValue("periodo", $data["periodo"]);
+            $acomActivas->bindValue("anioInicio", $data["anioInicio"]);
+            $acomActivas->bindValue("mesInicio", $data["mesInicio"]);
+            $acomActivas->bindValue("anioFin", $data["anioFin"]);
+            $acomActivas->bindValue("mesFin", $data["mesFin"]);
+
+            $porActivas->bindValue("sector", $data["sector"]);
+            $porActivas->bindValue("periodo", $data["periodo"]);
+            $porActivas->bindValue("anioInicio", $data["anioInicio"]);
+            $porActivas->bindValue("mesInicio", $data["mesInicio"]);
+            $porActivas->bindValue("anioFin", $data["anioFin"]);
+            $porActivas->bindValue("mesFin", $data["mesFin"]);
+
+            $acomExit->bindValue("sector", $data["sector"]);
+            $acomExit->bindValue("periodo", $data["periodo"]);
+            $acomExit->bindValue("anioInicio", $data["anioInicio"]);
+            $acomExit->bindValue("mesInicio", $data["mesInicio"]);
+            $acomExit->bindValue("anioFin", $data["anioFin"]);
+            $acomExit->bindValue("mesFin", $data["mesFin"]);
+
+            $acomExit->execute();
+            $acomActivas->execute();
+            $porActivas->execute();
+
+            $resultAcomActivas = $acomActivas->fetchAll();
+            $resultPorActivas = $porActivas->fetchAll();
+            $resultAcomExist = $acomExit->fetchAll();
+
+
+            $res = array();
+
+            for ($i = 0; $i < count($resultAcomActivas); $i++) {
+
+                $res[] = array("acomActivas" => $resultAcomActivas[$i]['acometidasActivas'], "porAcometidas"=>$resultPorActivas[$i]['porActivas'],
+                    "acomExistentes"=>$resultAcomExist[$i]['acomExistentes'],
+                    "periodo" => $resultAcomActivas[$i]["periodo"],
+                    "anio" => $resultAcomActivas[$i]["anio"]);
+            }
+
+            $tipoPeriodo = "Ninguno";
+            if ($data["periodo"] == 1){
+                $tipoPeriodo = "Mes";
+            }
+            elseif ($data["periodo"] == 3){
+                $tipoPeriodo = "Trimestre";
+            }
+            elseif ($data["periodo"] == 6){
+                $tipoPeriodo = "Semestre";
+            }
+            elseif ($data["periodo"] == 12){
+                $tipoPeriodo = "Año";
+            }
+
+            $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
+            $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
+            $now = date("d/m/Y");
+
+            if ($form->get("pdf")->isClicked()) {
+
+                $snappy = $this->get("knp_snappy.pdf");
+                $html = $this->renderView("RepTacticos/Reportes/reporte_acom_activas.html.twig",
+                    array("data"=>$res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
+                        "periodoInicio"=> $periodoInicio, "periodoFin" => $periodoFin, 'sector'=>$data["sector"]));
+
+                $filename = "reportePDF";
+
+                return new Response(
+                    $snappy->getOutputFromHtml($html),
+                    200,
+                    array(
+                        'Content-Type'          => 'application/pdf',
+                        'Content-Disposition'   => 'inline; filename="'.$filename.'.pdf"'
+                    )
+                );
+            }
+            else if ($form->get("send")->isClicked()) {
+                return $this->render('RepTacticos/CapturaDatos/PreviewTable/preview_acometidas_activas.html.twig', array(
+                    'form' => $form->createView(), "pageHeader" => "Reporte semi-resumen de acometidas activas",
+                    "data" => $res, "tipoPeriodo" => $tipoPeriodo
+                ));
+            }
+
+
         }
 
         return $this->render('RepTacticos/CapturaDatos/rep_semi_res_acom_activas.html.twig', array(
@@ -686,7 +945,7 @@ dbtransaccional.tarifas");
     public function mayorConsumoAction(Request $request){
         $manager = $this->getDoctrine()->getManager();
         $conn = $manager->getConnection();
-        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM dbtransaccional.sectores");
+        $stmnt = $conn->prepare("SELECT id_sector, nombre_sector FROM transaccional.sectores");
         $stmnt->execute();
 
         $result = $stmnt->fetchAll();

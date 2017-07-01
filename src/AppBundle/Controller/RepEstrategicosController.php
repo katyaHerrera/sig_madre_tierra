@@ -235,7 +235,7 @@ class RepEstrategicosController extends Controller
             ->add('anioInicio', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de inicio")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )
@@ -247,11 +247,12 @@ class RepEstrategicosController extends Controller
             ->add('anioFin', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de fin")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )))
-            ->add('send', SubmitType::class, array("label"=>"Enviar"))
+            ->add('send', SubmitType::class, array("label"=>"Preview"))
+            ->add('pdf', SubmitType::class, array("label" => "Crear PDF"))
             ->getForm();
 
         $form->handleRequest($request);
@@ -259,6 +260,117 @@ class RepEstrategicosController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
+            $conn = $this->getDoctrine()->getManager()->getConnection();
+            $recaudado = $conn->prepare("SELECT fac.anio, (FLOOR((fac.mes -1 ) / :periodo) + 1) periodo, 
+                                              SUM(fac.monto_recaudado) recaudado
+                                              FROM res_facturacion fac
+                                              WHERE (fac.anio * 12 + fac.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (fac.anio * 12 + fac.mes) <= (:anioFin * 12 + :mesFin)
+                                              GROUP BY fac.anio, FLOOR((fac.mes - 1) / :periodo)
+                                              ORDER BY fac.anio, periodo");
+            $otrosCostos = $conn->prepare("SELECT costos.anio, (FLOOR((costos.mes -1 ) / :periodo) + 1) periodo, 
+                                              SUM(costos.total) otrosCostos
+                                              FROM otros_costos costos
+                                              WHERE (costos.anio * 12 + costos.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (costos.anio * 12 + costos.mes) <= (:anioFin * 12 + :mesFin)
+                                              GROUP BY costos.anio, FLOOR((costos.mes - 1) / :periodo)
+                                              ORDER BY costos.anio, periodo");
+
+            $costosEnergia = $conn->prepare("SELECT costos.anio, (FLOOR((costos.mes -1 ) / :periodo) + 1) periodo, 
+                                              SUM(costos.costo_energia) costosEnergia
+                                              FROM res_macromedicion costos
+                                              WHERE (costos.anio * 12 + costos.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (costos.anio * 12 + costos.mes) <= (:anioFin * 12 + :mesFin)
+                                              GROUP BY costos.anio, FLOOR((costos.mes - 1) / :periodo)
+                                              ORDER BY costos.anio, periodo");
+
+            $recaudado->bindValue("periodo", $data["periodo"]);
+            $recaudado->bindValue("anioInicio", $data["anioInicio"]);
+            $recaudado->bindValue("mesInicio", $data["mesInicio"]);
+            $recaudado->bindValue("anioFin", $data["anioFin"]);
+            $recaudado->bindValue("mesFin", $data["mesFin"]);
+
+            $otrosCostos->bindValue("periodo", $data["periodo"]);
+            $otrosCostos->bindValue("anioInicio", $data["anioInicio"]);
+            $otrosCostos->bindValue("mesInicio", $data["mesInicio"]);
+            $otrosCostos->bindValue("anioFin", $data["anioFin"]);
+            $otrosCostos->bindValue("mesFin", $data["mesFin"]);
+
+            $costosEnergia->bindValue("periodo", $data["periodo"]);
+            $costosEnergia->bindValue("anioInicio", $data["anioInicio"]);
+            $costosEnergia->bindValue("mesInicio", $data["mesInicio"]);
+            $costosEnergia->bindValue("anioFin", $data["anioFin"]);
+            $costosEnergia->bindValue("mesFin", $data["mesFin"]);
+
+            $recaudado->execute();
+            $otrosCostos->execute();
+            $costosEnergia->execute();
+
+            $resultRecaudado = $recaudado->fetchAll();
+            $resultOtrosCostos = $otrosCostos->fetchAll();
+            $resultCostosEnergia = $costosEnergia->fetchAll();
+
+            $res = array();
+
+            for ($i = 0; $i < count($resultOtrosCostos); $i++)
+            {
+                $costos = $resultOtrosCostos[$i]["otrosCostos"] + $resultCostosEnergia[$i]["costosEnergia"];
+                $rent=($resultRecaudado[$i]["recaudado"]-$costos);
+                $rentabilidad=($rent/$resultRecaudado[$i]["recaudado"]);
+
+                $res[] = array("costosTotales" => $costos,
+                    "recaudado" => $resultRecaudado[$i]["recaudado"], "rentabilidad" => $rentabilidad,
+                    "periodo" => $resultRecaudado[$i]["periodo"],
+                    "anio" => $resultRecaudado[$i]["anio"]);
+            }
+
+            $tipoPeriodo = "Ninguno";
+            if ($data["periodo"] == 1){
+                $tipoPeriodo = "Mes";
+            }
+            elseif ($data["periodo"] == 3){
+                $tipoPeriodo = "Trimestre";
+            }
+            elseif ($data["periodo"] == 6){
+                $tipoPeriodo = "Semestre";
+            }
+            elseif ($data["periodo"] == 12){
+                $tipoPeriodo = "Año";
+            }
+
+            $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
+            $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
+            $now = date("d/m/Y");
+
+            if ($form->get("pdf")->isClicked()) {
+
+                $snappy = $this->get("knp_snappy.pdf");
+                $html = $this->renderView("RepEstrategicos/Reportes/reporte_rentabilidad.html.twig",
+                    array("data"=>$res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
+                        "periodoInicio"=> $periodoInicio, "periodoFin" => $periodoFin));
+
+                $filename = "reportePDF";
+
+                return new Response(
+                    $snappy->getOutputFromHtml($html),
+                    200,
+                    array(
+                        'Content-Type'          => 'application/pdf',
+                        'Content-Disposition'   => 'inline; filename="'.$filename.'.pdf"'
+                    )
+                );
+            }
+            else if ($form->get("send")->isClicked()) {
+                return $this->render('RepEstrategicos/CapturaDatos/PreviewTables/preview_rentabilidad.html.twig', array(
+                    'form' => $form->createView(), "pageHeader" => "Reporte de Indicador de Rentabilidad",
+                    "data" => $res, "tipoPeriodo" => $tipoPeriodo
+                ));
+            }
+
+
+
+
+
         }
 
         return $this->render('RepEstrategicos/CapturaDatos/rep_res_eficiencia_com_glo.html.twig', array(
@@ -302,7 +414,7 @@ class RepEstrategicosController extends Controller
             ->add('anioInicio', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de inicio")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )
@@ -314,11 +426,15 @@ class RepEstrategicosController extends Controller
             ->add('anioFin', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de fin")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )))
-            ->add('send', SubmitType::class, array("label"=>"Enviar"))
+
+
+
+            ->add('send', SubmitType::class, array("label"=>"Preview"))
+            ->add('pdf', SubmitType::class, array("label" => "Crear PDF"))
             ->getForm();
 
         $form->handleRequest($request);
@@ -326,6 +442,83 @@ class RepEstrategicosController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
+            $conn = $this->getDoctrine()->getManager()->getConnection();
+            $stmntContServicio = $conn->prepare("SELECT (sum(ra.serv_continuo)/:periodo) continuidad, ra.anio, (FLOOR((ra.mes -1 ) / :periodo) + 1) periodo
+                                             
+                                              FROM res_acometidas ra
+                                              WHERE (ra.anio * 12 + ra.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (ra.anio * 12 + ra.mes) <= (:anioFin * 12 + :mesFin) AND ra.sector=:sector
+                                              GROUP BY ra.anio, FLOOR((ra.mes - 1) / :periodo)
+                                              ORDER BY ra.anio, periodo");
+
+
+
+            $stmntContServicio->bindValue("periodo", $data["periodo"]);
+            $stmntContServicio->bindValue("anioInicio", $data["anioInicio"]);
+            $stmntContServicio->bindValue("mesInicio", $data["mesInicio"]);
+            $stmntContServicio->bindValue("anioFin", $data["anioFin"]);
+            $stmntContServicio->bindValue("mesFin", $data["mesFin"]);
+            $stmntContServicio->bindValue("sector", $data["sector"]);
+
+
+            $stmntContServicio->execute();
+
+            $resultContServicio = $stmntContServicio->fetchAll();
+
+
+            $res = array();
+
+            for ($i = 0; $i < count( $resultContServicio); $i++)
+            {
+
+
+                $res[] = array("continuo" => $resultContServicio[$i]["continuidad"],
+                     "periodo" =>$resultContServicio[$i]["periodo"],
+                    "anio" => $resultContServicio[$i]["anio"]);
+            }
+
+            $tipoPeriodo = "Ninguno";
+            if ($data["periodo"] == 1){
+                $tipoPeriodo = "Mes";
+            }
+            elseif ($data["periodo"] == 3){
+                $tipoPeriodo = "Trimestre";
+            }
+            elseif ($data["periodo"] == 6){
+                $tipoPeriodo = "Semestre";
+            }
+            elseif ($data["periodo"] == 12){
+                $tipoPeriodo = "Año";
+            }
+
+            $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
+            $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
+            $now = date("d/m/Y");
+
+            if ($form->get("pdf")->isClicked()) {
+
+                $snappy = $this->get("knp_snappy.pdf");
+                $html = $this->renderView("RepEstrategicos/Reportes/reporte_continuidad_servicio.html.twig",
+                    array("data"=>$res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
+                        "periodoInicio"=> $periodoInicio, "periodoFin" => $periodoFin));
+
+                $filename = "reportePDF";
+
+                return new Response(
+                    $snappy->getOutputFromHtml($html),
+                    200,
+                    array(
+                        'Content-Type'          => 'application/pdf',
+                        'Content-Disposition'   => 'inline; filename="'.$filename.'.pdf"'
+                    )
+                );
+            }
+            else if ($form->get("send")->isClicked()) {
+                return $this->render('RepEstrategicos/CapturaDatos/PreviewTables/preview_continuidad_servicio.html.twig', array(
+                    'form' => $form->createView(), "pageHeader" => "Reporte de continuidad de servicio",
+                    "data" => $res, "tipoPeriodo" => $tipoPeriodo
+                ));
+            }
 
         }
 
@@ -534,7 +727,7 @@ class RepEstrategicosController extends Controller
             ->add('anioInicio', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de inicio")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )
@@ -546,11 +739,12 @@ class RepEstrategicosController extends Controller
             ->add('anioFin', TextType::class, array(
                 "constraints" => array(
                     new NotBlank(array("message" => "Por favor ingrese una año de fin")),
-                    new Regex(array("pattern" => "^\\d+$",
+                    new Regex(array("pattern" => "/^[0-9]+$/",
                         "message" => "El valor ingresado no es año válido"
                     ))
                 )))
-            ->add('send', SubmitType::class, array("label"=>"Enviar"))
+            ->add('pdf', SubmitType::class, array("label" => "Crear PDF"))
+            ->add('send', SubmitType::class, array("label"=>"Preview"))
             ->getForm();
 
         $form->handleRequest($request);
@@ -558,6 +752,99 @@ class RepEstrategicosController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             // data is an array with the name of the inputs as keys to its values
             $data = $form->getData();
+            $conn = $this->getDoctrine()->getManager()->getConnection();
+            $stmntContServicio = $conn->prepare("SELECT (sum(rr.total_soluciones)) soluciones, (sum(rr.solucion_tiempo)) aTiempo, sum(rr.pendientes) pendientes,
+                                              tr.descripcion,tr.tiempo_atencion, rr.anio, (FLOOR((rr.mes -1 ) / :periodo) + 1) periodo
+                                             
+                                              FROM res_reclamos rr INNER JOIN transaccional.tipo_reclamos tr ON rr.tipo_reclamo=tr.id_tipo_reclamo
+                                              WHERE (rr.anio * 12 + rr.mes) >= (:anioInicio * 12 + :mesInicio) AND 
+                                              (rr.anio * 12 + rr.mes) <= (:anioFin * 12 + :mesFin) AND rr.tipo_reclamo=:tipo_reclamo
+                                              GROUP BY rr.tipo_reclamo
+                                              ORDER BY rr.anio, periodo");
+
+
+
+            $stmntContServicio->bindValue("periodo", $data["periodo"]);
+            $stmntContServicio->bindValue("anioInicio", $data["anioInicio"]);
+            $stmntContServicio->bindValue("mesInicio", $data["mesInicio"]);
+            $stmntContServicio->bindValue("anioFin", $data["anioFin"]);
+            $stmntContServicio->bindValue("mesFin", $data["mesFin"]);
+            $stmntContServicio->bindValue("tipo_reclamo", $data["tipo_reclamo"]);
+
+
+            $stmntContServicio->execute();
+
+            $resultContServicio = $stmntContServicio->fetchAll();
+
+
+            $res = array();
+
+            for ($i = 0; $i < count( $resultContServicio); $i++)
+            {
+                $soluciones=$resultContServicio[$i]["soluciones"];
+                $aTiempo=$resultContServicio[$i]["aTiempo"];
+                $pendientes=$resultContServicio[$i]["pendientes"];
+                $indicador=$aTiempo/$soluciones;
+                $reclamos=$soluciones+$pendientes;
+
+                $tipo_reclamo=$resultContServicio[$i]["descripcion"];
+
+                $res[] = array(
+                    "periodo" =>$resultContServicio[$i]["periodo"],
+                    "anio" => $resultContServicio[$i]["anio"],
+                    "indicador"=>$indicador,
+                    "pendientes"=>$pendientes,
+                    "total"=>$reclamos,
+                    "solucionados"=>$reclamos,
+                     );
+
+            }
+
+            $tipoPeriodo = "Ninguno";
+            if ($data["periodo"] == 1){
+                $tipoPeriodo = "Mes";
+            }
+            elseif ($data["periodo"] == 3){
+                $tipoPeriodo = "Trimestre";
+            }
+            elseif ($data["periodo"] == 6){
+                $tipoPeriodo = "Semestre";
+            }
+            elseif ($data["periodo"] == 12){
+                $tipoPeriodo = "Año";
+            }
+
+            $periodoInicio = array_search($data["mesInicio"], $this->meses) . " " . $data["anioInicio"];
+            $periodoFin = array_search($data["mesFin"], $this->meses) . " " . $data["anioFin"];
+            $now = date("d/m/Y");
+
+            if ($form->get("pdf")->isClicked()) {
+
+                $snappy = $this->get("knp_snappy.pdf");
+                $html = $this->renderView("RepEstrategicos/Reportes/reporte_reclamos.html.twig",
+                    array("data"=>$res, "tipoPeriodo" => $tipoPeriodo, "today" => $now,
+                        "periodoInicio"=> $periodoInicio, "periodoFin" => $periodoFin, "tipoPeriodo" => $tipoPeriodo,"tipoReclamo"=>$tipo_reclamo,));
+
+                $filename = "reportePDF";
+
+                return new Response(
+                    $snappy->getOutputFromHtml($html),
+                    200,
+                    array(
+                        'Content-Type'          => 'application/pdf',
+                        'Content-Disposition'   => 'inline; filename="'.$filename.'.pdf"'
+                    )
+                );
+            }
+            else if ($form->get("send")->isClicked()) {
+                return $this->render('RepEstrategicos/CapturaDatos/PreviewTables/preview_reclamos.html.twig', array(
+                    'form' => $form->createView(), "pageHeader" => "Reporte de indicador de tiempo de respuesta a reclamos",
+                    "data" => $res,
+                    "tipoReclamo"=>$tipo_reclamo,
+                    "tipoPeriodo" => $tipoPeriodo
+                ));
+            }
+
         }
 
         return $this->render('RepEstrategicos/CapturaDatos/rep_resp_reclamos.html.twig', array(
