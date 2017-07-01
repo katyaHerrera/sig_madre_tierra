@@ -16,9 +16,13 @@
         {% if(confirmation==true) %}
             <div class="alert alert-success fade in alert-dismissable" style="margin-top:18px;">
         <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">&times;</a>
-        <strong>Exito</strong> La copia de seguridad se ha restaurado correctamente.
+        <strong>Exito</strong> Los cambios se han realizado correctamente.
     </div>
 {% endif %}
+
+
+
+
         <div class="x_content">
             <div class="col-md-3 cuadro">
                 <div class="col-md-7">
@@ -43,7 +47,7 @@
                     <br/>
                     <b>EJECUTAR ETL</b>
                 </div>
-                <a class="col-md-4 cuadroHijo text-center" href="/respaldo-DB">
+                <a class="col-md-4 cuadroHijo text-center" href="{{asset('etl.php')  }}">
                     <span class="fa fa-database"></span>
                 </a>
             </div>

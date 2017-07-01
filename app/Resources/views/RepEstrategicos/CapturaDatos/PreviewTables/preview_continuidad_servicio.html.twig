@@ -1,0 +1,57 @@
+{% extends ':RepEstrategicos/CapturaDatos:rep_cont_servicio.html.twig' %}
+{% block previewTable %}
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Periodo</th>
+                    <th>Continuidad del servicio</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{% if tipoPeriodo == "Mes" %}
+                                {% if row.periodo == 1 %}
+                                    {{ "Enero "  ~ row.anio }}
+                                {% elseif row.periodo == 2 %}
+                                    {{ "Febrero " ~ row.anio }}
+                                {% elseif row.periodo == 3 %}
+                                    {{ "Marzo " ~ row.anio }}
+                                {% elseif row.periodo == 4 %}
+                                    {{ "Abril " ~ row.anio  }}
+                                {% elseif row.periodo == 5 %}
+                                    {{ "Mayo " ~ row.anio }}
+                                {% elseif row.periodo == 6 %}
+                                    {{ "Junio" ~ row.anio }}
+                                {% elseif row.periodo == 7 %}
+                                    {{ "Julio" ~ row.anio }}
+                                {% elseif row.periodo == 8 %}
+                                    {{ "Agosto" ~ row.anio }}
+                                {% elseif row.periodo == 9 %}
+                                    {{ "Septiembre" ~ row.anio }}
+                                {% elseif row.periodo == 10 %}
+                                    {{ "Octubre" ~ row.anio }}
+                                {% elseif row.periodo == 11 %}
+                                    {{ "Noviembre" ~ row.anio }}
+                                {% elseif row.periodo == 12 %}
+                                    {{ "Diciembre" ~ row.anio }}
+                                {% endif %}
+                            {% else %}
+                                {{ row.periodo ~ "° " ~ tipoPeriodo ~ " " ~ row.anio }}
+                            {% endif %}
+                        </td>
+
+                        <td>{{ "%.2f" | format(row.continuo * 100) ~ "%" }}</td>
+
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
