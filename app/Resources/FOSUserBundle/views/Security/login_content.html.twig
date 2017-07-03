@@ -10,11 +10,14 @@
     <div class="login_wrapper">
 
         <div class="animate form login_form">
-            <section class="login_content">
 
+
+            <section class="login_content">
+                <h3 >Sistema de Información Gerencial para Desarrolladora Madre Tierra S.A de C.V </h3>
 
                 <form action="{{ path("fos_user_security_check") }}" method="post">
-                    <h1>Iniciar sesión</h1>
+
+                    <h4>Iniciar sesión</h4>
                     {% if csrf_token %}
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token }}" />
                     {% endif %}
